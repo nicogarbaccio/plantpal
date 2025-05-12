@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 150 25% 98%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 142 68% 49%;
+  --primary-foreground: 355 100% 100%;
+  --secondary: 149 25% 60%;
+  --secondary-foreground: 24 9.8% 10%;
+  --accent: 146 20% 96%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 142 68% 49%;
+  --radius: 0.75rem;
+  
+  /* Custom colors for plant app */
+  --leaf-green: 142 68% 49%;
+  --sage: 149 25% 60%;
+  --off-white: 146 20% 96%;
+  --sunset-orange: 29 100% 63%;
+  --charcoal: 206 4% 20%;
+  
+  /* Chart colors */
+  --chart-1: 142 68% 49%;
+  --chart-2: 149 25% 60%;
+  --chart-3: 29 100% 63%;
+  --chart-4: 206 4% 20%;
+  --chart-5: 152 51% 38%;
+}
+
+.dark {
+  --background: 20 14.3% 4.1%;
+  --foreground: 60 9.1% 97.8%;
+  --muted: 12 6.5% 15.1%;
+  --muted-foreground: 24 5.4% 63.9%;
+  --popover: 20 14.3% 4.1%;
+  --popover-foreground: 60 9.1% 97.8%;
+  --card: 20 14.3% 4.1%;
+  --card-foreground: 60 9.1% 97.8%;
+  --border: 12 6.5% 15.1%;
+  --input: 12 6.5% 15.1%;
+  --primary: 142 68% 49%;
+  --primary-foreground: 355 100% 100%;
+  --secondary: 149 25% 60%;
+  --secondary-foreground: 60 9.1% 97.8%;
+  --accent: 146 20% 96%;
+  --accent-foreground: 60 9.1% 97.8%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 142 68% 49%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html, body {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-[#F5F7F5] text-[#2D3436] font-lato;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-poppins;
+  }
+}
+
+@layer utilities {
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  .font-lato {
+    font-family: 'Lato', sans-serif;
+  }
+}
+
+.plant-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.plant-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.search-container {
+  background-image: url('https://images.unsplash.com/photo-1592150621744-aca64f48394a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=600&q=80');
+  background-size: cover;
+  background-position: center;
+}
