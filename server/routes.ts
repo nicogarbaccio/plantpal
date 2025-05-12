@@ -3,8 +3,36 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertPlantSchema, insertUserPlantSchema, insertWateringHistorySchema } from "@shared/schema";
 import { z } from "zod";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  await setupAuth(app);
+  
+  // User auth status endpoint
+  app.get('/api/auth/user', (req, res) => {
+    if (req.isAuthenticated()) {
+      // Return user info from the session
+      const user = req.user as any;
+      res.json({
+        id: parseInt(user.claims.sub),
+        username: user.claims.email || `user${user.claims.sub}`,
+        email: user.claims.email,
+        firstName: user.claims.first_name,
+        lastName: user.claims.last_name,
+        profileImageUrl: user.claims.profile_image_url,
+        isAuthenticated: true
+      });
+    } else {
+      res.json({ isAuthenticated: false });
+    }
+  });
+  
+  // Check authentication status
+  app.get('/api/auth/status', (req, res) => {
+    res.json({ isAuthenticated: req.isAuthenticated() });
+  });
+  
   // put application routes here
   // prefix all routes with /api
 
@@ -73,10 +101,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's plant collection
-  app.get('/api/user-plants', async (req, res) => {
+  app.get('/api/user-plants', isAuthenticated, async (req, res) => {
     try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
+      const user = req.user as any;
+      const userId = parseInt(user.claims.sub);
       const userPlants = await storage.getUserPlants(userId);
       
       // Enhance user plants with their catalog plant information
@@ -116,10 +144,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add plant to user's collection
-  app.post('/api/user-plants', async (req, res) => {
+  app.post('/api/user-plants', isAuthenticated, async (req, res) => {
     try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
+      const user = req.user as any;
+      const userId = parseInt(user.claims.sub);
       
       const userPlantData = {
         ...insertUserPlantSchema.parse(req.body),

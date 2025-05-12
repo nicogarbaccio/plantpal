@@ -14,6 +14,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(userData: InsertUser & { id?: number }): Promise<User>;
   
   // Plant catalog methods
   getPlants(): Promise<Plant[]>;
@@ -90,6 +91,33 @@ export class MemStorage implements IStorage {
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
+  }
+  
+  async upsertUser(userData: InsertUser & { id?: number }): Promise<User> {
+    // If user already exists, update it
+    if (userData.id && this.users.has(userData.id)) {
+      const existingUser = this.users.get(userData.id)!;
+      const updatedUser = { ...existingUser, ...userData };
+      this.users.set(userData.id, updatedUser);
+      return updatedUser;
+    }
+    
+    // Otherwise create a new user
+    if (userData.id) {
+      // Use the provided ID
+      const user: User = { ...userData, id: userData.id };
+      this.users.set(userData.id, user);
+      
+      // Update userId counter if necessary
+      if (userData.id >= this.userId) {
+        this.userId = userData.id + 1;
+      }
+      
+      return user;
+    } else {
+      // Create a new user with auto-incremented ID
+      return this.createUser(userData);
+    }
   }
   
   // Plant catalog methods
