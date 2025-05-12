@@ -15,7 +15,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Get user info from the session
         const user = req.user as any;
-        const userId = parseInt(user.claims.sub);
+        const userId = user.claims.sub;
         
         // Ensure user is stored in database
         await storage.upsertUser({
