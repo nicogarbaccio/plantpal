@@ -191,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user plant
-  app.patch('/api/user-plants/:id', async (req, res) => {
+  app.patch('/api/user-plants/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -201,6 +201,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
+      }
+      
+      // Verify the user owns this plant
+      const user = req.user as any;
+      const userId = parseInt(user.claims.sub);
+      if (userPlant.userId !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to update this plant' });
       }
       
       // Only allow updating certain fields
