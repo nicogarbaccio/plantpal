@@ -119,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/user-plants', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const userId = parseInt(user.claims.sub);
+      const userId = user.claims.sub;
       const userPlants = await storage.getUserPlants(userId);
       
       // Enhance user plants with their catalog plant information
@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verify the user owns this plant
       const user = req.user as any;
-      const userId = parseInt(user.claims.sub);
+      const userId = user.claims.sub;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to view this plant' });
       }
@@ -169,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/user-plants', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const userId = parseInt(user.claims.sub);
+      const userId = user.claims.sub;
       
       const userPlantData = {
         ...insertUserPlantSchema.parse(req.body),
@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verify the user owns this plant
       const user = req.user as any;
-      const userId = parseInt(user.claims.sub);
+      const userId = user.claims.sub;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to update this plant' });
       }
@@ -248,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verify the user owns this plant
       const user = req.user as any;
-      const userId = parseInt(user.claims.sub);
+      const userId = user.claims.sub;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to delete this plant' });
       }
@@ -279,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verify the user owns this plant
       const user = req.user as any;
-      const userId = parseInt(user.claims.sub);
+      const userId = user.claims.sub;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to view this plant' });
       }
@@ -306,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verify the user owns this plant
       const user = req.user as any;
-      const userId = parseInt(user.claims.sub);
+      const userId = user.claims.sub;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to water this plant' });
       }
