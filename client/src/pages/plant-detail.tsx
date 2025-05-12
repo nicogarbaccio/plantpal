@@ -16,6 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { format, formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthContext } from "@/context/AuthContext";
 
 export default function PlantDetail() {
   const [matchCatalog] = useRoute("/plants/:id");
