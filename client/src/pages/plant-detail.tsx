@@ -90,9 +90,21 @@ export default function PlantDetail() {
   const userPlant = userPlantQuery.data;
   const wateringHistory = wateringHistoryQuery.data || [];
   
+  // Import useAuthContext
+  const { isAuthenticated, showLoginDialog } = useAuthContext();
+
   // Handle adding to collection
   const handleAddToCollection = () => {
     if (!catalogPlantQuery.data) return;
+    
+    // If user is not authenticated, show login dialog
+    if (!isAuthenticated) {
+      // Pass success callback to continue to add plant page after login
+      showLoginDialog(() => navigate(`/my-collection/add?plantId=${catalogPlantQuery.data.id}`));
+      return;
+    }
+    
+    // If authenticated, navigate directly
     navigate(`/my-collection/add?plantId=${catalogPlantQuery.data.id}`);
   };
   

@@ -10,6 +10,7 @@ import Explore from "@/pages/explore";
 import MyCollection from "@/pages/my-collection";
 import PlantDetail from "@/pages/plant-detail";
 import AddPlant from "@/pages/add-plant";
+import { AuthProvider } from "@/context/AuthContext";
 
 function Router() {
   return (
@@ -30,14 +31,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <main className="flex-grow">
-            <Router />
-          </main>
-          <Footer />
-        </div>
-        <Toaster />
+        <AuthProvider>
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-grow">
+              <Router />
+            </main>
+            <Footer />
+          </div>
+          <Toaster />
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
