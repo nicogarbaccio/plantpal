@@ -10,19 +10,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   
   // User auth status endpoint
-  app.get('/api/auth/user', (req, res) => {
+  app.get('/api/auth/user', async (req, res) => {
     if (req.isAuthenticated()) {
-      // Return user info from the session
-      const user = req.user as any;
-      res.json({
-        id: parseInt(user.claims.sub),
-        username: user.claims.email || `user${user.claims.sub}`,
-        email: user.claims.email,
-        firstName: user.claims.first_name,
-        lastName: user.claims.last_name,
-        profileImageUrl: user.claims.profile_image_url,
-        isAuthenticated: true
-      });
+      try {
+        // Get user info from the session
+        const user = req.user as any;
+        const userId = parseInt(user.claims.sub);
+        
+        // Ensure user is stored in database
+        await storage.upsertUser({
+          id: userId,
+          username: user.claims.email || `user${userId}`,
+          email: user.claims.email,
+          firstName: user.claims.first_name,
+          lastName: user.claims.last_name,
+          profileImageUrl: user.claims.profile_image_url
+        });
+        
+        // Get updated user from database
+        const dbUser = await storage.getUser(userId);
+        
+        res.json({
+          ...dbUser,
+          isAuthenticated: true
+        });
+      } catch (error) {
+        console.error("Error processing user data:", error);
+        res.status(500).json({ message: "Error processing user data", isAuthenticated: true });
+      }
     } else {
       res.json({ isAuthenticated: false });
     }
@@ -122,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user plant by ID
-  app.get('/api/user-plants/:id', async (req, res) => {
+  app.get('/api/user-plants/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -132,6 +147,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
+      }
+      
+      // Verify the user owns this plant
+      const user = req.user as any;
+      const userId = parseInt(user.claims.sub);
+      if (userPlant.userId !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to view this plant' });
       }
       
       // Add the catalog plant information
@@ -205,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete user plant
-  app.delete('/api/user-plants/:id', async (req, res) => {
+  app.delete('/api/user-plants/:id', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -215,6 +237,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
+      }
+      
+      // Verify the user owns this plant
+      const user = req.user as any;
+      const userId = parseInt(user.claims.sub);
+      if (userPlant.userId !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to delete this plant' });
       }
       
       const deleted = await storage.deleteUserPlant(id);
@@ -229,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get watering history for a user plant
-  app.get('/api/user-plants/:id/watering-history', async (req, res) => {
+  app.get('/api/user-plants/:id/watering-history', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -239,6 +268,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
+      }
+      
+      // Verify the user owns this plant
+      const user = req.user as any;
+      const userId = parseInt(user.claims.sub);
+      if (userPlant.userId !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to view this plant' });
       }
       
       const wateringHistory = await storage.getWateringHistory(id);
@@ -249,7 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Water a plant
-  app.post('/api/user-plants/:id/water', async (req, res) => {
+  app.post('/api/user-plants/:id/water', isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -259,6 +295,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
+      }
+      
+      // Verify the user owns this plant
+      const user = req.user as any;
+      const userId = parseInt(user.claims.sub);
+      if (userPlant.userId !== userId) {
+        return res.status(403).json({ message: 'You do not have permission to water this plant' });
       }
       
       const notes = req.body.notes || '';
