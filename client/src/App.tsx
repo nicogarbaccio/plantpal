@@ -10,6 +10,7 @@ import Explore from "@/pages/explore";
 import MyCollection from "@/pages/my-collection";
 import PlantDetail from "@/pages/plant-detail";
 import AddPlant from "@/pages/add-plant";
+import WishlistPage from "@/pages/wishlist";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/protected-route";
 
@@ -42,6 +43,16 @@ function Router() {
           </ProtectedRoute>
         )}
       </Route>
+      
+      {/* Wishlist route */}
+      <Route path="/wishlist">
+        {() => (
+          <ProtectedRoute>
+            <WishlistPage />
+          </ProtectedRoute>
+        )}
+      </Route>
+      
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

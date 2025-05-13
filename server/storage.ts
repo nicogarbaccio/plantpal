@@ -59,11 +59,13 @@ export class MemStorage implements IStorage {
   private userPlants: Map<number, UserPlant>;
   private wateringHistory: Map<number, WateringHistory>;
   private categories: Map<number, Category>;
+  private wishlist: Map<number, Wishlist>;
   
   private plantId: number;
   private userPlantId: number;
   private wateringId: number;
   private categoryId: number;
+  private wishlistId: number;
 
   constructor() {
     this.users = new Map();
