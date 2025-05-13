@@ -33,22 +33,22 @@ export default function Footer() {
             <ul className="space-y-2 font-lato">
               <li>
                 <Link href="/explore">
-                  <a className="text-gray-300 hover:text-white transition">Explore Plants</a>
+                  <div className="text-gray-300 hover:text-white transition cursor-pointer">Explore Plants</div>
                 </Link>
               </li>
               <li>
                 <Link href="/my-collection">
-                  <a className="text-gray-300 hover:text-white transition">My Collection</a>
+                  <div className="text-gray-300 hover:text-white transition cursor-pointer">My Collection</div>
                 </Link>
               </li>
               <li>
                 <Link href="/">
-                  <a className="text-gray-300 hover:text-white transition">Plant Care Guide</a>
+                  <div className="text-gray-300 hover:text-white transition cursor-pointer">Plant Care Guide</div>
                 </Link>
               </li>
               <li>
                 <Link href="/">
-                  <a className="text-gray-300 hover:text-white transition">Account Settings</a>
+                  <div className="text-gray-300 hover:text-white transition cursor-pointer">Account Settings</div>
                 </Link>
               </li>
             </ul>

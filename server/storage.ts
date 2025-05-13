@@ -40,9 +40,9 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<Category>;
 
   // Utility methods
-  getPlantsNeedingWater(userId: number): Promise<UserPlant[]>;
-  getHealthyPlants(userId: number): Promise<UserPlant[]>;
-  getUpcomingWateringPlants(userId: number): Promise<UserPlant[]>;
+  getPlantsNeedingWater(userId: string): Promise<UserPlant[]>;
+  getHealthyPlants(userId: string): Promise<UserPlant[]>;
+  getUpcomingWateringPlants(userId: string): Promise<UserPlant[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -268,7 +268,7 @@ export class MemStorage implements IStorage {
   }
   
   // Utility methods
-  async getPlantsNeedingWater(userId: number): Promise<UserPlant[]> {
+  async getPlantsNeedingWater(userId: string): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
     const today = new Date();
     
@@ -279,7 +279,7 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getHealthyPlants(userId: number): Promise<UserPlant[]> {
+  async getHealthyPlants(userId: string): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
     const today = new Date();
     
@@ -292,7 +292,7 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getUpcomingWateringPlants(userId: number): Promise<UserPlant[]> {
+  async getUpcomingWateringPlants(userId: string): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
     const today = new Date();
     

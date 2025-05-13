@@ -17,10 +17,30 @@ function Router() {
     <Switch>
       <Route path="/" component={Explore} />
       <Route path="/explore" component={Explore} />
-      <Route path="/my-collection" component={MyCollection} />
       <Route path="/plants/:id" component={PlantDetail} />
-      <Route path="/my-collection/add" component={AddPlant} />
-      <Route path="/my-collection/:id" component={PlantDetail} />
+      
+      {/* Protected routes */}
+      <Route path="/my-collection">
+        {(params) => (
+          <ProtectedRoute>
+            <MyCollection />
+          </ProtectedRoute>
+        )}
+      </Route>
+      <Route path="/my-collection/add">
+        {(params) => (
+          <ProtectedRoute>
+            <AddPlant />
+          </ProtectedRoute>
+        )}
+      </Route>
+      <Route path="/my-collection/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <PlantDetail />
+          </ProtectedRoute>
+        )}
+      </Route>
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
