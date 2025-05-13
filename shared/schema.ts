@@ -109,3 +109,19 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = typeof categories.$inferSelect;
+
+// Wishlist schema
+export const wishlist = pgTable("wishlist", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(), // Matches user.id type
+  plantId: integer("plant_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWishlistSchema = createInsertSchema(wishlist).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertWishlist = z.infer<typeof insertWishlistSchema>;
+export type Wishlist = typeof wishlist.$inferSelect;

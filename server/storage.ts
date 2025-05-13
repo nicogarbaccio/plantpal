@@ -3,7 +3,8 @@ import {
   plants, Plant, InsertPlant,
   userPlants, UserPlant, InsertUserPlant,
   wateringHistory, WateringHistory, InsertWateringHistory,
-  categories, Category, InsertCategory
+  categories, Category, InsertCategory,
+  wishlist, Wishlist, InsertWishlist
 } from "@shared/schema";
 import { addDays, format } from "date-fns";
 
@@ -38,6 +39,13 @@ export interface IStorage {
   getCategories(): Promise<Category[]>;
   getCategory(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  
+  // Wishlist methods
+  getWishlist(userId: string): Promise<Wishlist[]>;
+  getWishlistWithPlants(userId: string): Promise<(Wishlist & { plant: Plant })[]>;
+  addToWishlist(userId: string, plantId: number): Promise<Wishlist>;
+  removeFromWishlist(userId: string, plantId: number): Promise<boolean>;
+  isInWishlist(userId: string, plantId: number): Promise<boolean>;
 
   // Utility methods
   getPlantsNeedingWater(userId: string): Promise<UserPlant[]>;
@@ -63,11 +71,13 @@ export class MemStorage implements IStorage {
     this.userPlants = new Map();
     this.wateringHistory = new Map();
     this.categories = new Map();
+    this.wishlist = new Map();
     
     this.plantId = 1;
     this.userPlantId = 1;
     this.wateringId = 1;
     this.categoryId = 1;
+    this.wishlistId = 1;
     
     // Initialize with default data
     this.seedData();
