@@ -11,6 +11,7 @@ import MyCollection from "@/pages/my-collection";
 import PlantDetail from "@/pages/plant-detail";
 import AddPlant from "@/pages/add-plant";
 import { AuthProvider } from "@/context/AuthContext";
+import ProtectedRoute from "@/components/protected-route";
 
 function Router() {
   return (
