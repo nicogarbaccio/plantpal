@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 
 export interface User {
-  id: number;
+  id: string;
   username: string;
   email?: string;
   firstName?: string;
   lastName?: string;
   profileImageUrl?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
   isAuthenticated: boolean;
 }
 
