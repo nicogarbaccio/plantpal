@@ -16,7 +16,8 @@ export default function WishlistPage() {
   const { data: wishlistItems, isLoading } = useQuery<(Wishlist & { plant: Plant })[]>({
     queryKey: ["/api/wishlist"],
     retry: false,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    staleTime: 30000 // 30 seconds
   });
   
   // Remove from wishlist mutation
@@ -24,12 +25,14 @@ export default function WishlistPage() {
     try {
       await apiRequest({
         url: `/api/wishlist/${plantId}`,
-        method: 'DELETE'
+        method: 'DELETE',
+        body: {}
       });
       
       // Invalidate cache
       queryClient.invalidateQueries({
         queryKey: ['/api/wishlist'],
+        exact: false
       });
       
       toast({

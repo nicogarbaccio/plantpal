@@ -49,7 +49,8 @@ export default function WishlistButton({
         // Remove from wishlist
         await apiRequest({
           url: `/api/wishlist/${plantId}`,
-          method: 'DELETE'
+          method: 'DELETE',
+          body: {}
         });
         
         toast({
@@ -60,7 +61,8 @@ export default function WishlistButton({
         // Add to wishlist
         await apiRequest({
           url: `/api/wishlist/${plantId}`,
-          method: 'POST'
+          method: 'POST',
+          body: {}
         });
         
         toast({
@@ -70,8 +72,14 @@ export default function WishlistButton({
       }
       
       // Invalidate cached data
-      queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/wishlist/check', plantId] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/wishlist'],
+        exact: false
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/wishlist/check', plantId],
+        exact: false
+      });
       
     } catch (error) {
       console.error("Error toggling wishlist:", error);
