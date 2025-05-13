@@ -328,10 +328,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get plants needing water
-  app.get('/api/plants-status/needs-water', async (req, res) => {
+  app.get('/api/plants-status/needs-water', isAuthenticated, async (req, res) => {
     try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
+      const user = req.user as any;
+      const userId = user.claims.sub;
       const plants = await storage.getPlantsNeedingWater(userId);
       
       // Enhance user plants with their catalog plant information
@@ -349,10 +349,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get healthy plants
-  app.get('/api/plants-status/healthy', async (req, res) => {
+  app.get('/api/plants-status/healthy', isAuthenticated, async (req, res) => {
     try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
+      const user = req.user as any;
+      const userId = user.claims.sub;
       const plants = await storage.getHealthyPlants(userId);
       
       // Enhance user plants with their catalog plant information
@@ -370,10 +370,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get plants with upcoming watering
-  app.get('/api/plants-status/upcoming', async (req, res) => {
+  app.get('/api/plants-status/upcoming', isAuthenticated, async (req, res) => {
     try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
+      const user = req.user as any;
+      const userId = user.claims.sub;
       const plants = await storage.getUpcomingWateringPlants(userId);
       
       // Enhance user plants with their catalog plant information

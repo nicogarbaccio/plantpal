@@ -64,14 +64,14 @@ export default function Header() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6">
           <Link href="/explore">
-            <a className={`${isActive("/explore") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins`}>
+            <div className={`${isActive("/explore") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins cursor-pointer`}>
               Explore Plants
-            </a>
+            </div>
           </Link>
           <Link href="/my-collection">
-            <a className={`${isActive("/my-collection") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins`}>
+            <div className={`${isActive("/my-collection") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins cursor-pointer`}>
               My Collection
-            </a>
+            </div>
           </Link>
         </div>
         
@@ -183,20 +183,20 @@ export default function Header() {
                 )}
                 
                 <Link href="/explore">
-                  <a 
-                    className={`${isActive("/explore") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins text-lg`}
+                  <div 
+                    className={`${isActive("/explore") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins text-lg cursor-pointer`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Explore Plants
-                  </a>
+                  </div>
                 </Link>
                 <Link href="/my-collection">
-                  <a 
-                    className={`${isActive("/my-collection") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins text-lg`}
+                  <div 
+                    className={`${isActive("/my-collection") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins text-lg cursor-pointer`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Collection
-                  </a>
+                  </div>
                 </Link>
                 <Link href="/my-collection/add">
                   <Button 
