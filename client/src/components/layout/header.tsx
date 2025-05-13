@@ -68,16 +68,47 @@ export default function Header() {
               Explore Plants
             </div>
           </Link>
-          <Link href="/my-collection">
-            <div className={`${isActive("/my-collection") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins cursor-pointer`}>
+          {isAuthenticated ? (
+            <Link href="/my-collection">
+              <div className={`${isActive("/my-collection") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins cursor-pointer`}>
+                My Collection
+              </div>
+            </Link>
+          ) : (
+            <div 
+              className="text-charcoal hover:text-primary transition font-poppins cursor-pointer"
+              onClick={login}
+            >
               My Collection
             </div>
-          </Link>
+          )}
         </div>
         
         <div className="hidden md:flex items-center space-x-3">
-          <Link href="/my-collection/add">
-            <Button className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-[12px] font-poppins">
+          {isAuthenticated ? (
+            <Link href="/my-collection/add">
+              <Button className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-[12px] font-poppins">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-5 w-5 mr-2" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Plant
+              </Button>
+            </Link>
+          ) : (
+            <Button 
+              className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-[12px] font-poppins"
+              onClick={login}
+            >
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
                 className="h-5 w-5 mr-2" 
@@ -93,7 +124,7 @@ export default function Header() {
               </svg>
               Add Plant
             </Button>
-          </Link>
+          )}
 
           {/* User menu or login button */}
           {isAuthenticated ? (
@@ -190,18 +221,56 @@ export default function Header() {
                     Explore Plants
                   </div>
                 </Link>
-                <Link href="/my-collection">
+                {isAuthenticated ? (
+                  <Link href="/my-collection">
+                    <div 
+                      className={`${isActive("/my-collection") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins text-lg cursor-pointer`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Collection
+                    </div>
+                  </Link>
+                ) : (
                   <div 
-                    className={`${isActive("/my-collection") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins text-lg cursor-pointer`}
-                    onClick={() => setIsMenuOpen(false)}
+                    className="text-charcoal hover:text-primary transition font-poppins text-lg cursor-pointer"
+                    onClick={() => {
+                      login();
+                      setIsMenuOpen(false);
+                    }}
                   >
                     My Collection
                   </div>
-                </Link>
-                <Link href="/my-collection/add">
+                )}
+                
+                {isAuthenticated ? (
+                  <Link href="/my-collection/add">
+                    <Button 
+                      className="bg-primary hover:bg-primary/90 text-white w-full mt-4 rounded-[12px] font-poppins"
+                      onClick={handleAddPlant}
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="h-5 w-5 mr-2" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      >
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                      Add Plant
+                    </Button>
+                  </Link>
+                ) : (
                   <Button 
                     className="bg-primary hover:bg-primary/90 text-white w-full mt-4 rounded-[12px] font-poppins"
-                    onClick={handleAddPlant}
+                    onClick={() => {
+                      login();
+                      setIsMenuOpen(false);
+                    }}
                   >
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
@@ -218,7 +287,7 @@ export default function Header() {
                     </svg>
                     Add Plant
                   </Button>
-                </Link>
+                )}
                 
                 {/* Login/Logout button */}
                 {isAuthenticated ? (
