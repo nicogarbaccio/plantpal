@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import PlantGallery from "@/components/plant-gallery";
 import WaterProgress from "@/components/water-progress";
+import WishlistButton from "@/components/wishlist-button";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 import { Plant, UserPlant, WateringHistory } from "@shared/schema";
@@ -166,8 +167,15 @@ export default function PlantDetail() {
             </div>
           ) : (
             <>
-              <h1 className="text-3xl font-semibold font-poppins mb-2">{isUserPlantView ? userPlant?.nickname : plant?.name}</h1>
-              <p className="text-gray-500 text-sm font-lato italic mb-4">{plant?.botanicalName}</p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h1 className="text-3xl font-semibold font-poppins mb-2">{isUserPlantView ? userPlant?.nickname : plant?.name}</h1>
+                  <p className="text-gray-500 text-sm font-lato italic mb-4">{plant?.botanicalName}</p>
+                </div>
+                {!isUserPlantView && plant?.id && (
+                  <WishlistButton plantId={plant.id} showText size="default" variant="outline" />
+                )}
+              </div>
               
               {isUserPlantView && userPlant?.location && (
                 <p className="text-gray-700 mb-4">

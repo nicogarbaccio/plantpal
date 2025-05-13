@@ -15,7 +15,8 @@ export default function WishlistPage() {
   // Fetch wishlist
   const { data: wishlistItems, isLoading } = useQuery<(Wishlist & { plant: Plant })[]>({
     queryKey: ["/api/wishlist"],
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false
   });
   
   // Remove from wishlist mutation

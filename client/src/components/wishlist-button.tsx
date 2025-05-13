@@ -27,7 +27,8 @@ export default function WishlistButton({
   const { data, isLoading } = useQuery<{ isInWishlist: boolean }>({
     queryKey: ['/api/wishlist/check', plantId],
     enabled: isAuthenticated,
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false
   });
   
   const isInWishlist = data?.isInWishlist || false;

@@ -30,6 +30,7 @@ export default function Header() {
     if (path === "/" && location === "/") return true;
     if (path === "/explore" && (location === "/" || location === "/explore")) return true;
     if (path === "/my-collection" && location.startsWith("/my-collection")) return true;
+    if (path === "/wishlist" && location.startsWith("/wishlist")) return true;
     return false;
   };
 
@@ -80,6 +81,45 @@ export default function Header() {
               onClick={login}
             >
               My Collection
+            </div>
+          )}
+          
+          {isAuthenticated ? (
+            <Link href="/wishlist">
+              <div className={`${isActive("/wishlist") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins cursor-pointer`}>
+                <span className="flex items-center">
+                  Wishlist
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    fill={isActive("/wishlist") ? "currentColor" : "none"}
+                    stroke="currentColor" 
+                    className="w-4 h-4 ml-1" 
+                    strokeWidth="2"
+                  >
+                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                  </svg>
+                </span>
+              </div>
+            </Link>
+          ) : (
+            <div 
+              className="text-charcoal hover:text-primary transition font-poppins cursor-pointer"
+              onClick={login}
+            >
+              <span className="flex items-center">
+                Wishlist
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 24 24" 
+                  fill="none"
+                  stroke="currentColor" 
+                  className="w-4 h-4 ml-1" 
+                  strokeWidth="2"
+                >
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </svg>
+              </span>
             </div>
           )}
         </div>
@@ -239,6 +279,51 @@ export default function Header() {
                     }}
                   >
                     My Collection
+                  </div>
+                )}
+                
+                {isAuthenticated ? (
+                  <Link href="/wishlist">
+                    <div 
+                      className={`${isActive("/wishlist") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins text-lg cursor-pointer`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="flex items-center">
+                        Wishlist
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          viewBox="0 0 24 24" 
+                          fill={isActive("/wishlist") ? "currentColor" : "none"}
+                          stroke="currentColor" 
+                          className="w-4 h-4 ml-1" 
+                          strokeWidth="2"
+                        >
+                          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                        </svg>
+                      </span>
+                    </div>
+                  </Link>
+                ) : (
+                  <div 
+                    className="text-charcoal hover:text-primary transition font-poppins text-lg cursor-pointer"
+                    onClick={() => {
+                      login();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <span className="flex items-center">
+                      Wishlist
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="none"
+                        stroke="currentColor" 
+                        className="w-4 h-4 ml-1" 
+                        strokeWidth="2"
+                      >
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                      </svg>
+                    </span>
                   </div>
                 )}
                 
