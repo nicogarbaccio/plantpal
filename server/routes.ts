@@ -390,6 +390,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Wishlist routes
+  app.get('/api/wishlist', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims.sub;
+      
+      const wishlistItems = await storage.getWishlistWithPlants(userId);
+      res.json(wishlistItems);
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+      res.status(500).json({ message: 'Error fetching wishlist' });
+    }
+  });
+  
+  app.post('/api/wishlist/:plantId', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims.sub;
+      const plantId = parseInt(req.params.plantId);
+      
+      if (isNaN(plantId)) {
+        return res.status(400).json({ message: 'Invalid plant ID' });
+      }
+      
+      // Check if plant exists
+      const plant = await storage.getPlant(plantId);
+      if (!plant) {
+        return res.status(404).json({ message: 'Plant not found' });
+      }
+      
+      const wishlistItem = await storage.addToWishlist(userId, plantId);
+      res.status(201).json(wishlistItem);
+    } catch (error) {
+      console.error('Error adding to wishlist:', error);
+      res.status(500).json({ message: 'Error adding to wishlist' });
+    }
+  });
+  
+  app.delete('/api/wishlist/:plantId', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims.sub;
+      const plantId = parseInt(req.params.plantId);
+      
+      if (isNaN(plantId)) {
+        return res.status(400).json({ message: 'Invalid plant ID' });
+      }
+      
+      const success = await storage.removeFromWishlist(userId, plantId);
+      if (success) {
+        res.status(200).json({ message: 'Plant removed from wishlist' });
+      } else {
+        res.status(404).json({ message: 'Plant not found in wishlist' });
+      }
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      res.status(500).json({ message: 'Error removing from wishlist' });
+    }
+  });
+  
+  app.get('/api/wishlist/check/:plantId', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user.claims.sub;
+      const plantId = parseInt(req.params.plantId);
+      
+      if (isNaN(plantId)) {
+        return res.status(400).json({ message: 'Invalid plant ID' });
+      }
+      
+      const isInWishlist = await storage.isInWishlist(userId, plantId);
+      res.json({ isInWishlist });
+    } catch (error) {
+      console.error('Error checking wishlist:', error);
+      res.status(500).json({ message: 'Error checking wishlist' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

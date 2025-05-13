@@ -277,6 +277,63 @@ export class MemStorage implements IStorage {
     return category;
   }
   
+  // Wishlist methods
+  async getWishlist(userId: string): Promise<Wishlist[]> {
+    return Array.from(this.wishlist.values()).filter(item => item.userId === userId);
+  }
+  
+  async getWishlistWithPlants(userId: string): Promise<(Wishlist & { plant: Plant })[]> {
+    const wishlistItems = await this.getWishlist(userId);
+    return Promise.all(
+      wishlistItems.map(async (item) => {
+        const plant = await this.getPlant(item.plantId);
+        return {
+          ...item,
+          plant: plant!
+        };
+      })
+    );
+  }
+  
+  async addToWishlist(userId: string, plantId: number): Promise<Wishlist> {
+    // Check if already in wishlist
+    const existingItems = await this.getWishlist(userId);
+    const existingItem = existingItems.find(item => item.plantId === plantId);
+    
+    if (existingItem) {
+      return existingItem;
+    }
+    
+    // Add new wishlist item
+    const id = this.wishlistId++;
+    const now = new Date();
+    const wishlistItem: Wishlist = {
+      id,
+      userId,
+      plantId,
+      createdAt: now
+    };
+    
+    this.wishlist.set(id, wishlistItem);
+    return wishlistItem;
+  }
+  
+  async removeFromWishlist(userId: string, plantId: number): Promise<boolean> {
+    const wishlistItems = await this.getWishlist(userId);
+    const itemToRemove = wishlistItems.find(item => item.plantId === plantId);
+    
+    if (!itemToRemove) {
+      return false;
+    }
+    
+    return this.wishlist.delete(itemToRemove.id);
+  }
+  
+  async isInWishlist(userId: string, plantId: number): Promise<boolean> {
+    const wishlistItems = await this.getWishlist(userId);
+    return wishlistItems.some(item => item.plantId === plantId);
+  }
+  
   // Utility methods
   async getPlantsNeedingWater(userId: string): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
