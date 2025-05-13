@@ -78,18 +78,12 @@ interface LoginDialogProps {
 }
 
 function LoginDialog({ isOpen, onOpenChange, onLogin }: LoginDialogProps) {
-  const handleCancel = () => {
-    // Close the dialog and reset any pending callbacks
-    onOpenChange(false);
-    
-    // Navigate back to a non-protected route if needed
-    // We'll handle navigation in the ProtectedRoute component instead
-    // so this just closes the dialog
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" onEscapeKeyDown={(e) => {
+        // Handle ESC key to properly cancel the dialog
+        onOpenChange(false);
+      }}>
         <DialogHeader>
           <DialogTitle>Sign in required</DialogTitle>
           <DialogDescription>
@@ -106,7 +100,7 @@ function LoginDialog({ isOpen, onOpenChange, onLogin }: LoginDialogProps) {
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={handleCancel} 
+            onClick={() => onOpenChange(false)} 
             className="login-dialog-cancel"
           >
             Cancel

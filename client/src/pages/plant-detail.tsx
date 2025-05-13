@@ -100,8 +100,12 @@ export default function PlantDetail() {
     
     // If user is not authenticated, show login dialog
     if (!isAuthenticated) {
-      // Pass success callback to continue to add plant page after login
-      showLoginDialog(() => navigate(`/my-collection/add?plantId=${catalogPlantQuery.data.id}`));
+      // Just open the login dialog with a success callback, 
+      // but don't redirect if it's cancelled
+      showLoginDialog(() => {
+        // This will only run if login is successful
+        navigate(`/my-collection/add?plantId=${catalogPlantQuery.data.id}`);
+      });
       return;
     }
     
