@@ -25,10 +25,12 @@ export default function PlantCard({ plant }: PlantCardProps) {
             className="w-full h-full object-cover"
           />
           <div 
-            className="absolute top-3 right-3 z-10"
+            className="absolute top-3 right-3 z-10 flex items-center justify-center"
             onClick={handleWishlistClick}
           >
-            <WishlistButton plantId={plant.id} size="icon" variant="ghost" />
+            <div className="bg-white p-2 rounded-full shadow-md">
+              <WishlistButton plantId={plant.id} size="icon" variant="ghost" />
+            </div>
           </div>
         </div>
         <CardContent className="p-4">

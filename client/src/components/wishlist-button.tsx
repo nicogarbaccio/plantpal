@@ -99,9 +99,11 @@ export default function WishlistButton({
       size={size}
       disabled={isLoading || isProcessing}
       onClick={handleToggleWishlist}
-      className={isInWishlist ? "text-red-500 hover:text-red-700" : undefined}
+      className={`flex items-center justify-center ${isInWishlist ? "text-red-500 hover:text-red-700" : ""}`}
     >
-      <Heart className={`${isInWishlist ? "fill-current" : ""} h-4 w-4 mr-2`} />
+      <Heart 
+        className={`${isInWishlist ? "fill-current" : ""} h-4 w-4 ${showText ? "mr-2" : ""}`} 
+      />
       {showText && (isInWishlist ? "Remove from Wishlist" : "Add to Wishlist")}
     </Button>
   );

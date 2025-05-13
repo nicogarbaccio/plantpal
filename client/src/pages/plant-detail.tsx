@@ -173,7 +173,9 @@ export default function PlantDetail() {
                   <p className="text-gray-500 text-sm font-lato italic mb-4">{plant?.botanicalName}</p>
                 </div>
                 {!isUserPlantView && plant?.id && (
-                  <WishlistButton plantId={plant.id} showText size="default" variant="outline" />
+                  <div className="bg-white rounded-full shadow-sm p-1">
+                    <WishlistButton plantId={plant.id} showText size="default" variant="outline" />
+                  </div>
                 )}
               </div>
               
