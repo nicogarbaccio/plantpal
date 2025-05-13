@@ -33,6 +33,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const hideLoginDialog = () => {
     setIsLoginDialogOpen(false);
+    // Reset onLoginSuccess when dialog is closed to prevent later execution
+    setOnLoginSuccess(undefined);
   };
 
   const handleLogin = () => {
@@ -76,6 +78,15 @@ interface LoginDialogProps {
 }
 
 function LoginDialog({ isOpen, onOpenChange, onLogin }: LoginDialogProps) {
+  const handleCancel = () => {
+    // Close the dialog and reset any pending callbacks
+    onOpenChange(false);
+    
+    // Navigate back to a non-protected route if needed
+    // We'll handle navigation in the ProtectedRoute component instead
+    // so this just closes the dialog
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -93,7 +104,11 @@ function LoginDialog({ isOpen, onOpenChange, onLogin }: LoginDialogProps) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={handleCancel} 
+            className="login-dialog-cancel"
+          >
             Cancel
           </Button>
           <Button onClick={onLogin} className="bg-primary hover:bg-primary/90 text-white">
