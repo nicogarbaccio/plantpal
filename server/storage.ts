@@ -271,15 +271,15 @@ export class MemStorage implements IStorage {
     
     // Update the user plant
     await this.updateUserPlant(userPlantId, {
-      lastWatered: today,
-      nextWaterDate: addDays(today, userPlant.wateringFrequency)
+      lastWatered: today.toISOString(),
+      nextWaterDate: addDays(today, userPlant.wateringFrequency).toISOString()
     });
     
     // Create watering record
     return this.createWateringRecord({
       userPlantId,
-      wateredDate: today,
-      notes: notes || '',
+      wateredDate: today.toISOString(),
+      notes: notes || null,
     });
   }
   

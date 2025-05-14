@@ -96,8 +96,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's plant collection
   app.get('/api/user-plants', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       const userPlants = await storage.getUserPlants(userId);
       
       // Enhance user plants with their catalog plant information
