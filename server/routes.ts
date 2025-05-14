@@ -3,49 +3,27 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertPlantSchema, insertUserPlantSchema, insertWateringHistorySchema } from "@shared/schema";
 import { z } from "zod";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./auth";
+import { DatabaseStorage } from "./db-storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Use the database storage implementation
+  // @ts-ignore - we'll fix the TS issues in the next iteration
+  global.storage = new DatabaseStorage();
+  
   // Set up authentication
-  await setupAuth(app);
+  setupAuth(app);
   
-  // User auth status endpoint
-  app.get('/api/auth/user', async (req, res) => {
-    if (req.isAuthenticated()) {
-      try {
-        // Get user info from the session
-        const user = req.user as any;
-        const userId = user.claims.sub;
-        
-        // Ensure user is stored in database
-        await storage.upsertUser({
-          id: userId,
-          username: user.claims.email || `user${userId}`,
-          email: user.claims.email,
-          firstName: user.claims.first_name,
-          lastName: user.claims.last_name,
-          profileImageUrl: user.claims.profile_image_url
-        });
-        
-        // Get updated user from database
-        const dbUser = await storage.getUser(userId);
-        
-        res.json({
-          ...dbUser,
-          isAuthenticated: true
-        });
-      } catch (error) {
-        console.error("Error processing user data:", error);
-        res.status(500).json({ message: "Error processing user data", isAuthenticated: true });
-      }
+  // User routes for custom authentication
+  app.get('/api/user', isAuthenticated, (req, res) => {
+    if (req.isAuthenticated() && req.user) {
+      res.json({
+        ...req.user,
+        isAuthenticated: true
+      });
     } else {
-      res.json({ isAuthenticated: false });
+      res.status(401).json({ isAuthenticated: false });
     }
-  });
-  
-  // Check authentication status
-  app.get('/api/auth/status', (req, res) => {
-    res.json({ isAuthenticated: req.isAuthenticated() });
   });
   
   // put application routes here

@@ -12,10 +12,10 @@ import { addDays, format } from "date-fns";
 // you might need
 export interface IStorage {
   // User methods
-  getUser(id: string): Promise<User | undefined>;
+  getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  upsertUser(userData: InsertUser & { id: string }): Promise<User>;
+  upsertUser(userData: Partial<User> & { id: number }): Promise<User>;
   
   // Plant catalog methods
   getPlants(): Promise<Plant[]>;
@@ -24,7 +24,7 @@ export interface IStorage {
   createPlant(plant: InsertPlant): Promise<Plant>;
   
   // User's plant collection methods
-  getUserPlants(userId: string): Promise<UserPlant[]>;
+  getUserPlants(userId: number): Promise<UserPlant[]>;
   getUserPlant(id: number): Promise<UserPlant | undefined>;
   createUserPlant(userPlant: InsertUserPlant): Promise<UserPlant>;
   updateUserPlant(id: number, userPlant: Partial<InsertUserPlant>): Promise<UserPlant | undefined>;
@@ -41,26 +41,27 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<Category>;
   
   // Wishlist methods
-  getWishlist(userId: string): Promise<Wishlist[]>;
-  getWishlistWithPlants(userId: string): Promise<(Wishlist & { plant: Plant })[]>;
-  addToWishlist(userId: string, plantId: number): Promise<Wishlist>;
-  removeFromWishlist(userId: string, plantId: number): Promise<boolean>;
-  isInWishlist(userId: string, plantId: number): Promise<boolean>;
+  getWishlist(userId: number): Promise<Wishlist[]>;
+  getWishlistWithPlants(userId: number): Promise<(Wishlist & { plant: Plant })[]>;
+  addToWishlist(userId: number, plantId: number): Promise<Wishlist>;
+  removeFromWishlist(userId: number, plantId: number): Promise<boolean>;
+  isInWishlist(userId: number, plantId: number): Promise<boolean>;
 
   // Utility methods
-  getPlantsNeedingWater(userId: string): Promise<UserPlant[]>;
-  getHealthyPlants(userId: string): Promise<UserPlant[]>;
-  getUpcomingWateringPlants(userId: string): Promise<UserPlant[]>;
+  getPlantsNeedingWater(userId: number): Promise<UserPlant[]>;
+  getHealthyPlants(userId: number): Promise<UserPlant[]>;
+  getUpcomingWateringPlants(userId: number): Promise<UserPlant[]>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+  private users: Map<number, User>;
   private plants: Map<number, Plant>;
   private userPlants: Map<number, UserPlant>;
   private wateringHistory: Map<number, WateringHistory>;
   private categories: Map<number, Category>;
   private wishlist: Map<number, Wishlist>;
   
+  private userId: number;
   private plantId: number;
   private userPlantId: number;
   private wateringId: number;
