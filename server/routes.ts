@@ -128,8 +128,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to view this plant' });
       }
@@ -146,8 +146,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add plant to user's collection
   app.post('/api/user-plants', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       
       const userPlantData = {
         ...insertUserPlantSchema.parse(req.body),
@@ -182,8 +182,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to update this plant' });
       }
@@ -225,8 +225,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to delete this plant' });
       }
@@ -256,8 +256,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to view this plant' });
       }
@@ -283,8 +283,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       if (userPlant.userId !== userId) {
         return res.status(403).json({ message: 'You do not have permission to water this plant' });
       }
@@ -308,8 +308,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get plants needing water
   app.get('/api/plants-status/needs-water', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       const plants = await storage.getPlantsNeedingWater(userId);
       
       // Enhance user plants with their catalog plant information
@@ -329,8 +329,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get healthy plants
   app.get('/api/plants-status/healthy', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       const plants = await storage.getHealthyPlants(userId);
       
       // Enhance user plants with their catalog plant information
@@ -350,8 +350,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get plants with upcoming watering
   app.get('/api/plants-status/upcoming', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       const plants = await storage.getUpcomingWateringPlants(userId);
       
       // Enhance user plants with their catalog plant information
@@ -371,8 +371,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wishlist routes
   app.get('/api/wishlist', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       
       const wishlistItems = await storage.getWishlistWithPlants(userId);
       res.json(wishlistItems);
@@ -384,8 +384,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post('/api/wishlist/:plantId', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       const plantId = parseInt(req.params.plantId);
       
       if (isNaN(plantId)) {
@@ -408,8 +408,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.delete('/api/wishlist/:plantId', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       const plantId = parseInt(req.params.plantId);
       
       if (isNaN(plantId)) {
@@ -430,8 +430,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/wishlist/check/:plantId', isAuthenticated, async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      const user = req.user as Express.User;
+      const userId = user.id;
       const plantId = parseInt(req.params.plantId);
       
       if (isNaN(plantId)) {
