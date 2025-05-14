@@ -224,10 +224,11 @@ export class MemStorage implements IStorage {
     
     if (partialUserPlant.lastWatered) {
       const lastWatered = new Date(partialUserPlant.lastWatered);
-      nextWaterDate = addDays(lastWatered, wateringFrequency);
+      nextWaterDate = addDays(lastWatered, wateringFrequency).toISOString();
     } else if (partialUserPlant.wateringFrequency !== undefined && 
                existingUserPlant.lastWatered) {
-      nextWaterDate = addDays(existingUserPlant.lastWatered, wateringFrequency);
+      const lastWatered = new Date(existingUserPlant.lastWatered);
+      nextWaterDate = addDays(lastWatered, wateringFrequency).toISOString();
     }
     
     const updatedUserPlant: UserPlant = {
@@ -542,7 +543,7 @@ export class MemStorage implements IStorage {
         plantId: 2, // Pothos
         nickname: 'Golden Pothos',
         location: 'Bedroom',
-        lastWatered: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+        lastWatered: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
         wateringFrequency: 14,
         notes: 'Propagated from office plant',
         imageUrl: 'https://pixabay.com/get/ga329a11e4489bd80e8b3d3970cc74f6e2cf0a1fc7bd3e0be51155fc76d49eb95ed707ee1f27d1d3fe66ea3d7e58b1f2b8db5682378b7f594d2651072ca117723_1280.jpg'
@@ -552,7 +553,7 @@ export class MemStorage implements IStorage {
         plantId: 4, // Snake Plant
         nickname: 'Snake Plant',
         location: 'Office',
-        lastWatered: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000), // 28 days ago
+        lastWatered: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(), // 28 days ago
         wateringFrequency: 30,
         notes: 'Very low maintenance',
         imageUrl: 'https://pixabay.com/get/g2b1ed98472a8e174779f4292429adb54f12cde9df9f893219fcdcb5550cb7f746ed6a5c5dfc4de61f17117bed80802485ec22629c8f8bf6a13207e976f301c49_1280.jpg'
@@ -562,7 +563,7 @@ export class MemStorage implements IStorage {
         plantId: 5, // Fiddle Leaf Fig
         nickname: 'Fiddle Leaf Fig',
         location: 'Living Room',
-        lastWatered: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+        lastWatered: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago
         wateringFrequency: 7,
         notes: 'Needs bright light',
         imageUrl: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600&q=80'
@@ -572,7 +573,7 @@ export class MemStorage implements IStorage {
         plantId: 6, // ZZ Plant
         nickname: 'ZZ Plant',
         location: 'Bedroom',
-        lastWatered: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+        lastWatered: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
         wateringFrequency: 30,
         notes: 'Almost impossible to kill',
         imageUrl: 'https://images.unsplash.com/photo-1591454371758-644f9d123a81?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600&q=80'
@@ -582,7 +583,7 @@ export class MemStorage implements IStorage {
         plantId: 7, // Calathea
         nickname: 'Calathea',
         location: 'Office',
-        lastWatered: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+        lastWatered: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
         wateringFrequency: 7,
         notes: 'Needs high humidity',
         imageUrl: 'https://pixabay.com/get/g9bbe1f2ab85f402c77ae17fe586429cc8e5ad30dc6c7d35d3441773b7819a7cfff491a686560b35a9a6f655d44636e7dfa114d3fe8f2f7e435512661773e2819_1280.jpg'
