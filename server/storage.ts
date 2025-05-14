@@ -116,7 +116,7 @@ export class MemStorage implements IStorage {
     return user;
   }
   
-  async upsertUser(userData: InsertUser & { id: string }): Promise<User> {
+  async upsertUser(userData: Partial<User> & { id: number }): Promise<User> {
     // If user already exists, update it
     if (this.users.has(userData.id)) {
       const existingUser = this.users.get(userData.id)!;
@@ -129,8 +129,25 @@ export class MemStorage implements IStorage {
       return updatedUser;
     }
     
-    // Otherwise create a new user
-    return this.createUser(userData);
+    // Otherwise create a new user using the id provided
+    // This should only happen with explicit id creation
+    if (userData.username && userData.password) {
+      const user: User = {
+        id: userData.id,
+        username: userData.username,
+        password: userData.password,
+        email: userData.email || null,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        profileImageUrl: userData.profileImageUrl || null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.users.set(user.id, user);
+      return user;
+    }
+    
+    throw new Error('Cannot create user: missing required fields');
   }
   
   // Plant catalog methods
@@ -165,7 +182,7 @@ export class MemStorage implements IStorage {
   }
   
   // User's plant collection methods
-  async getUserPlants(userId: string): Promise<UserPlant[]> {
+  async getUserPlants(userId: number): Promise<UserPlant[]> {
     return Array.from(this.userPlants.values()).filter(
       (userPlant) => userPlant.userId === userId
     );
@@ -281,11 +298,11 @@ export class MemStorage implements IStorage {
   }
   
   // Wishlist methods
-  async getWishlist(userId: string): Promise<Wishlist[]> {
+  async getWishlist(userId: number): Promise<Wishlist[]> {
     return Array.from(this.wishlist.values()).filter(item => item.userId === userId);
   }
   
-  async getWishlistWithPlants(userId: string): Promise<(Wishlist & { plant: Plant })[]> {
+  async getWishlistWithPlants(userId: number): Promise<(Wishlist & { plant: Plant })[]> {
     const wishlistItems = await this.getWishlist(userId);
     return Promise.all(
       wishlistItems.map(async (item) => {
@@ -298,7 +315,7 @@ export class MemStorage implements IStorage {
     );
   }
   
-  async addToWishlist(userId: string, plantId: number): Promise<Wishlist> {
+  async addToWishlist(userId: number, plantId: number): Promise<Wishlist> {
     // Check if already in wishlist
     const existingItems = await this.getWishlist(userId);
     const existingItem = existingItems.find(item => item.plantId === plantId);
@@ -321,7 +338,7 @@ export class MemStorage implements IStorage {
     return wishlistItem;
   }
   
-  async removeFromWishlist(userId: string, plantId: number): Promise<boolean> {
+  async removeFromWishlist(userId: number, plantId: number): Promise<boolean> {
     const wishlistItems = await this.getWishlist(userId);
     const itemToRemove = wishlistItems.find(item => item.plantId === plantId);
     
@@ -332,13 +349,13 @@ export class MemStorage implements IStorage {
     return this.wishlist.delete(itemToRemove.id);
   }
   
-  async isInWishlist(userId: string, plantId: number): Promise<boolean> {
+  async isInWishlist(userId: number, plantId: number): Promise<boolean> {
     const wishlistItems = await this.getWishlist(userId);
     return wishlistItems.some(item => item.plantId === plantId);
   }
   
   // Utility methods
-  async getPlantsNeedingWater(userId: string): Promise<UserPlant[]> {
+  async getPlantsNeedingWater(userId: number): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
     const today = new Date();
     
@@ -349,7 +366,7 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getHealthyPlants(userId: string): Promise<UserPlant[]> {
+  async getHealthyPlants(userId: number): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
     const today = new Date();
     
@@ -362,7 +379,7 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getUpcomingWateringPlants(userId: string): Promise<UserPlant[]> {
+  async getUpcomingWateringPlants(userId: number): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
     const today = new Date();
     
@@ -378,9 +395,9 @@ export class MemStorage implements IStorage {
   // Seed data for testing purposes
   private seedData() {
     // Add a default user
-    this.upsertUser({
-      id: '1', // Using string ID for Replit Auth compatibility
+    this.createUser({
       username: 'demo',
+      password: 'demo123', // Adding required password field for custom auth
       email: 'demo@example.com',
       firstName: 'Demo',
       lastName: 'User',
