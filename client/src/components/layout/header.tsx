@@ -40,10 +40,10 @@ export default function Header() {
   };
   
   return (
-    <header className="bg-primary text-white shadow-md">
+    <header className="bg-white shadow-md">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center">
-          <div className="bg-white p-1.5 rounded-full mr-2 shadow-sm">
+          <div className="bg-primary/10 p-1.5 rounded-full mr-2">
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
               className="h-7 w-7 text-primary filter drop-shadow-[0_0_2px_#2ECC71]" 
@@ -91,20 +91,20 @@ export default function Header() {
             </svg>
           </div>
           <Link href="/">
-            <h1 className="text-2xl font-poppins font-semibold text-white cursor-pointer">PlantPal</h1>
+            <h1 className="text-2xl font-poppins font-semibold text-charcoal cursor-pointer">PlantPal</h1>
           </Link>
         </div>
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6">
           <Link href="/explore">
-            <div className={`${isActive("/explore") ? "text-white font-semibold" : "text-white/80"} hover:text-white transition font-poppins cursor-pointer`}>
+            <div className={`${isActive("/explore") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins cursor-pointer`}>
               Explore Plants
             </div>
           </Link>
           {isAuthenticated ? (
             <Link href="/my-collection">
-              <div className={`${isActive("/my-collection") ? "text-white font-semibold" : "text-white/80"} hover:text-white transition font-poppins cursor-pointer`}>
+              <div className={`${isActive("/my-collection") ? "text-primary" : "text-charcoal"} hover:text-primary transition font-poppins cursor-pointer`}>
                 My Collection
               </div>
             </Link>
