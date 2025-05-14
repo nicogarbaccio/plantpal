@@ -1,20 +1,18 @@
 import { Link } from "wouter";
-import { useState } from "react";
 import { Plant } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import WishlistButton from "@/components/wishlist-button";
 
 interface PlantCardProps {
   plant: Plant;
 }
 
 export default function PlantCard({ plant }: PlantCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
-  
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
+    // The WishlistButton handles the wishlist logic internally
   };
   
   return (
@@ -26,20 +24,14 @@ export default function PlantCard({ plant }: PlantCardProps) {
             alt={plant.name} 
             className="w-full h-full object-cover"
           />
-          <button 
-            className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-100"
-            onClick={toggleFavorite}
+          <div 
+            className="absolute top-3 right-3 z-10 flex items-center justify-center"
+            onClick={handleWishlistClick}
           >
-            {isFavorite ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-charcoal" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            )}
-          </button>
+            <div className="bg-white p-2 rounded-full shadow-md">
+              <WishlistButton plantId={plant.id} size="icon" variant="ghost" />
+            </div>
+          </div>
         </div>
         <CardContent className="p-4">
           <h4 className="font-poppins font-medium text-lg mb-1">{plant.name}</h4>

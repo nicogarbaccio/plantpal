@@ -29,6 +29,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plant } from "@shared/schema";
 import { AddPlantFormData } from "@/types";
 import PlantForm from "@/components/plant-form";
+import { useAuthContext } from "@/context/AuthContext";
 
 // Create form schema
 const formSchema = z.object({
@@ -45,6 +46,17 @@ export default function AddPlant() {
   const search = useSearch();
   const searchParams = new URLSearchParams(search);
   const preselectedPlantId = searchParams.get("plantId") ? parseInt(searchParams.get("plantId")!) : undefined;
+  const { isAuthenticated, showLoginDialog } = useAuthContext();
+  
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      showLoginDialog(() => {
+        // This callback will run after successful login
+        // No need to redirect as user will already be on this page
+      });
+    }
+  }, [isAuthenticated, showLoginDialog]);
   
   // Fetch catalog plants
   const { data: plants, isLoading: plantsLoading } = useQuery<Plant[]>({

@@ -3,7 +3,8 @@ import {
   plants, Plant, InsertPlant,
   userPlants, UserPlant, InsertUserPlant,
   wateringHistory, WateringHistory, InsertWateringHistory,
-  categories, Category, InsertCategory
+  categories, Category, InsertCategory,
+  wishlist, Wishlist, InsertWishlist
 } from "@shared/schema";
 import { addDays, format } from "date-fns";
 
@@ -11,9 +12,10 @@ import { addDays, format } from "date-fns";
 // you might need
 export interface IStorage {
   // User methods
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(userData: InsertUser & { id: string }): Promise<User>;
   
   // Plant catalog methods
   getPlants(): Promise<Plant[]>;
@@ -22,7 +24,7 @@ export interface IStorage {
   createPlant(plant: InsertPlant): Promise<Plant>;
   
   // User's plant collection methods
-  getUserPlants(userId: number): Promise<UserPlant[]>;
+  getUserPlants(userId: string): Promise<UserPlant[]>;
   getUserPlant(id: number): Promise<UserPlant | undefined>;
   createUserPlant(userPlant: InsertUserPlant): Promise<UserPlant>;
   updateUserPlant(id: number, userPlant: Partial<InsertUserPlant>): Promise<UserPlant | undefined>;
@@ -37,25 +39,33 @@ export interface IStorage {
   getCategories(): Promise<Category[]>;
   getCategory(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  
+  // Wishlist methods
+  getWishlist(userId: string): Promise<Wishlist[]>;
+  getWishlistWithPlants(userId: string): Promise<(Wishlist & { plant: Plant })[]>;
+  addToWishlist(userId: string, plantId: number): Promise<Wishlist>;
+  removeFromWishlist(userId: string, plantId: number): Promise<boolean>;
+  isInWishlist(userId: string, plantId: number): Promise<boolean>;
 
   // Utility methods
-  getPlantsNeedingWater(userId: number): Promise<UserPlant[]>;
-  getHealthyPlants(userId: number): Promise<UserPlant[]>;
-  getUpcomingWateringPlants(userId: number): Promise<UserPlant[]>;
+  getPlantsNeedingWater(userId: string): Promise<UserPlant[]>;
+  getHealthyPlants(userId: string): Promise<UserPlant[]>;
+  getUpcomingWateringPlants(userId: string): Promise<UserPlant[]>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
+  private users: Map<string, User>;
   private plants: Map<number, Plant>;
   private userPlants: Map<number, UserPlant>;
   private wateringHistory: Map<number, WateringHistory>;
   private categories: Map<number, Category>;
+  private wishlist: Map<number, Wishlist>;
   
-  private userId: number;
   private plantId: number;
   private userPlantId: number;
   private wateringId: number;
   private categoryId: number;
+  private wishlistId: number;
 
   constructor() {
     this.users = new Map();
@@ -63,19 +73,20 @@ export class MemStorage implements IStorage {
     this.userPlants = new Map();
     this.wateringHistory = new Map();
     this.categories = new Map();
+    this.wishlist = new Map();
     
-    this.userId = 1;
     this.plantId = 1;
     this.userPlantId = 1;
     this.wateringId = 1;
     this.categoryId = 1;
+    this.wishlistId = 1;
     
     // Initialize with default data
     this.seedData();
   }
 
   // User methods
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
 
@@ -86,10 +97,39 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    if (!insertUser.id) {
+      throw new Error('User ID is required');
+    }
+    
+    const user: User = { 
+      ...insertUser,
+      email: insertUser.email || null,
+      firstName: insertUser.firstName || null,
+      lastName: insertUser.lastName || null,
+      profileImageUrl: insertUser.profileImageUrl || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    this.users.set(user.id, user);
     return user;
+  }
+  
+  async upsertUser(userData: InsertUser & { id: string }): Promise<User> {
+    // If user already exists, update it
+    if (this.users.has(userData.id)) {
+      const existingUser = this.users.get(userData.id)!;
+      const updatedUser = { 
+        ...existingUser, 
+        ...userData,
+        updatedAt: new Date()
+      };
+      this.users.set(userData.id, updatedUser);
+      return updatedUser;
+    }
+    
+    // Otherwise create a new user
+    return this.createUser(userData);
   }
   
   // Plant catalog methods
@@ -124,7 +164,7 @@ export class MemStorage implements IStorage {
   }
   
   // User's plant collection methods
-  async getUserPlants(userId: number): Promise<UserPlant[]> {
+  async getUserPlants(userId: string): Promise<UserPlant[]> {
     return Array.from(this.userPlants.values()).filter(
       (userPlant) => userPlant.userId === userId
     );
@@ -239,8 +279,65 @@ export class MemStorage implements IStorage {
     return category;
   }
   
+  // Wishlist methods
+  async getWishlist(userId: string): Promise<Wishlist[]> {
+    return Array.from(this.wishlist.values()).filter(item => item.userId === userId);
+  }
+  
+  async getWishlistWithPlants(userId: string): Promise<(Wishlist & { plant: Plant })[]> {
+    const wishlistItems = await this.getWishlist(userId);
+    return Promise.all(
+      wishlistItems.map(async (item) => {
+        const plant = await this.getPlant(item.plantId);
+        return {
+          ...item,
+          plant: plant!
+        };
+      })
+    );
+  }
+  
+  async addToWishlist(userId: string, plantId: number): Promise<Wishlist> {
+    // Check if already in wishlist
+    const existingItems = await this.getWishlist(userId);
+    const existingItem = existingItems.find(item => item.plantId === plantId);
+    
+    if (existingItem) {
+      return existingItem;
+    }
+    
+    // Add new wishlist item
+    const id = this.wishlistId++;
+    const now = new Date();
+    const wishlistItem: Wishlist = {
+      id,
+      userId,
+      plantId,
+      createdAt: now
+    };
+    
+    this.wishlist.set(id, wishlistItem);
+    return wishlistItem;
+  }
+  
+  async removeFromWishlist(userId: string, plantId: number): Promise<boolean> {
+    const wishlistItems = await this.getWishlist(userId);
+    const itemToRemove = wishlistItems.find(item => item.plantId === plantId);
+    
+    if (!itemToRemove) {
+      return false;
+    }
+    
+    return this.wishlist.delete(itemToRemove.id);
+  }
+  
+  async isInWishlist(userId: string, plantId: number): Promise<boolean> {
+    const wishlistItems = await this.getWishlist(userId);
+    return wishlistItems.some(item => item.plantId === plantId);
+  }
+  
   // Utility methods
-  async getPlantsNeedingWater(userId: number): Promise<UserPlant[]> {
+  async getPlantsNeedingWater(userId: string): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
     const today = new Date();
     
@@ -251,7 +348,7 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getHealthyPlants(userId: number): Promise<UserPlant[]> {
+  async getHealthyPlants(userId: string): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
     const today = new Date();
     
@@ -264,7 +361,7 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async getUpcomingWateringPlants(userId: number): Promise<UserPlant[]> {
+  async getUpcomingWateringPlants(userId: string): Promise<UserPlant[]> {
     const userPlants = await this.getUserPlants(userId);
     const today = new Date();
     
@@ -280,9 +377,13 @@ export class MemStorage implements IStorage {
   // Seed data for testing purposes
   private seedData() {
     // Add a default user
-    this.createUser({
+    this.upsertUser({
+      id: '1', // Using string ID for Replit Auth compatibility
       username: 'demo',
-      password: 'password',
+      email: 'demo@example.com',
+      firstName: 'Demo',
+      lastName: 'User',
+      profileImageUrl: null
     });
     
     // Add categories
@@ -408,7 +509,7 @@ export class MemStorage implements IStorage {
     // Add some plants to the user's collection
     const userPlants = [
       {
-        userId: 1,
+        userId: '1', // Using string ID for Replit Auth compatibility
         plantId: 1, // Monstera
         nickname: 'Monstera',
         location: 'Living Room',
@@ -418,7 +519,7 @@ export class MemStorage implements IStorage {
         imageUrl: 'https://pixabay.com/get/g211f86cd284b492ad5a1badffb0094a0f8522ba75e85765a070ebe85818f5294b99adf98730357fcf1a80e93a232da0a24e95a423b194ef140a33de01ac77429_1280.jpg'
       },
       {
-        userId: 1,
+        userId: '1', // Using string ID for Replit Auth compatibility
         plantId: 2, // Pothos
         nickname: 'Golden Pothos',
         location: 'Bedroom',
@@ -428,7 +529,7 @@ export class MemStorage implements IStorage {
         imageUrl: 'https://pixabay.com/get/ga329a11e4489bd80e8b3d3970cc74f6e2cf0a1fc7bd3e0be51155fc76d49eb95ed707ee1f27d1d3fe66ea3d7e58b1f2b8db5682378b7f594d2651072ca117723_1280.jpg'
       },
       {
-        userId: 1,
+        userId: '1', // Using string ID for Replit Auth compatibility
         plantId: 4, // Snake Plant
         nickname: 'Snake Plant',
         location: 'Office',
@@ -438,7 +539,7 @@ export class MemStorage implements IStorage {
         imageUrl: 'https://pixabay.com/get/g2b1ed98472a8e174779f4292429adb54f12cde9df9f893219fcdcb5550cb7f746ed6a5c5dfc4de61f17117bed80802485ec22629c8f8bf6a13207e976f301c49_1280.jpg'
       },
       {
-        userId: 1,
+        userId: '1', // Using string ID for Replit Auth compatibility
         plantId: 5, // Fiddle Leaf Fig
         nickname: 'Fiddle Leaf Fig',
         location: 'Living Room',
@@ -448,7 +549,7 @@ export class MemStorage implements IStorage {
         imageUrl: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600&q=80'
       },
       {
-        userId: 1,
+        userId: '1', // Using string ID for Replit Auth compatibility
         plantId: 6, // ZZ Plant
         nickname: 'ZZ Plant',
         location: 'Bedroom',
@@ -458,7 +559,7 @@ export class MemStorage implements IStorage {
         imageUrl: 'https://images.unsplash.com/photo-1591454371758-644f9d123a81?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600&q=80'
       },
       {
-        userId: 1,
+        userId: '1', // Using string ID for Replit Auth compatibility
         plantId: 7, // Calathea
         nickname: 'Calathea',
         location: 'Office',

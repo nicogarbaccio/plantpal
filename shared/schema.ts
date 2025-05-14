@@ -1,21 +1,38 @@
-import { pgTable, text, serial, integer, boolean, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, date, timestamp, varchar, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
 // User schema
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+  id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  profileImageUrl: text("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  createdAt: true,
+  updatedAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type UpsertUser = InsertUser & { id: string };
 
 // Plant schema for catalog
 export const plants = pgTable("plants", {
@@ -40,7 +57,7 @@ export type Plant = typeof plants.$inferSelect;
 // User's plant collection schema
 export const userPlants = pgTable("user_plants", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: text("user_id").notNull(), // Using text to match user.id type
   plantId: integer("plant_id").notNull(),
   nickname: text("nickname"),
   location: text("location"),
@@ -50,11 +67,13 @@ export const userPlants = pgTable("user_plants", {
   imageUrl: text("image_url"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertUserPlantSchema = createInsertSchema(userPlants).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export type InsertUserPlant = z.infer<typeof insertUserPlantSchema>;
@@ -90,3 +109,19 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = typeof categories.$inferSelect;
+
+// Wishlist schema
+export const wishlist = pgTable("wishlist", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(), // Matches user.id type
+  plantId: integer("plant_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWishlistSchema = createInsertSchema(wishlist).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertWishlist = z.infer<typeof insertWishlistSchema>;
+export type Wishlist = typeof wishlist.$inferSelect;
