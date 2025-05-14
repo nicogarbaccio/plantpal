@@ -45,16 +45,46 @@ export default function Header() {
         <div className="flex items-center">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
-            className="h-8 w-8 text-primary mr-2" 
-            fill="none" 
-            viewBox="0 0 24 24" 
+            className="h-8 w-8 text-primary mr-2 filter drop-shadow-[0_0_3px_#2ECC71]" 
+            viewBox="0 0 512 512"
             stroke="currentColor"
+            fill="none"
           >
             <path 
               strokeLinecap="round" 
               strokeLinejoin="round" 
               strokeWidth={2} 
-              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
+              d="M256 48c-79 0-192 122-192 240 0 57 24 90 48 112 33 30 77 44 144 44s111-14 144-44c24-22 48-55 48-112 0-118-113-240-192-240z" 
+            />
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M256 48v416" 
+            />
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M256 368c72-48 96-96 96-144" 
+            />
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M160 224c0 48 24 96 96 144" 
+            />
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M256 240c32-32 80-112 80-144" 
+            />
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M176 96c0 32 48 112 80 144" 
             />
           </svg>
           <Link href="/">
