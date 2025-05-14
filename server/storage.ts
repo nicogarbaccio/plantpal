@@ -204,9 +204,10 @@ export class MemStorage implements IStorage {
     const userPlant: UserPlant = {
       ...insertUserPlant,
       id,
-      lastWatered: lastWatered,
-      nextWaterDate: nextWaterDate,
-      createdAt: new Date()
+      lastWatered: lastWatered.toISOString(),
+      nextWaterDate: nextWaterDate.toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     this.userPlants.set(id, userPlant);
@@ -527,17 +528,17 @@ export class MemStorage implements IStorage {
     // Add some plants to the user's collection
     const userPlants = [
       {
-        userId: '1', // Using string ID for Replit Auth compatibility
+        userId: 1, // Using numeric ID for custom auth
         plantId: 1, // Monstera
         nickname: 'Monstera',
         location: 'Living Room',
-        lastWatered: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+        lastWatered: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
         wateringFrequency: 7,
         notes: 'Gift from Mom',
         imageUrl: 'https://pixabay.com/get/g211f86cd284b492ad5a1badffb0094a0f8522ba75e85765a070ebe85818f5294b99adf98730357fcf1a80e93a232da0a24e95a423b194ef140a33de01ac77429_1280.jpg'
       },
       {
-        userId: '1', // Using string ID for Replit Auth compatibility
+        userId: 1, // Using numeric ID for custom auth
         plantId: 2, // Pothos
         nickname: 'Golden Pothos',
         location: 'Bedroom',
@@ -547,7 +548,7 @@ export class MemStorage implements IStorage {
         imageUrl: 'https://pixabay.com/get/ga329a11e4489bd80e8b3d3970cc74f6e2cf0a1fc7bd3e0be51155fc76d49eb95ed707ee1f27d1d3fe66ea3d7e58b1f2b8db5682378b7f594d2651072ca117723_1280.jpg'
       },
       {
-        userId: '1', // Using string ID for Replit Auth compatibility
+        userId: 1, // Using numeric ID for custom auth 
         plantId: 4, // Snake Plant
         nickname: 'Snake Plant',
         location: 'Office',
@@ -557,7 +558,7 @@ export class MemStorage implements IStorage {
         imageUrl: 'https://pixabay.com/get/g2b1ed98472a8e174779f4292429adb54f12cde9df9f893219fcdcb5550cb7f746ed6a5c5dfc4de61f17117bed80802485ec22629c8f8bf6a13207e976f301c49_1280.jpg'
       },
       {
-        userId: '1', // Using string ID for Replit Auth compatibility
+        userId: 1, // Using numeric ID for custom auth
         plantId: 5, // Fiddle Leaf Fig
         nickname: 'Fiddle Leaf Fig',
         location: 'Living Room',
@@ -567,7 +568,7 @@ export class MemStorage implements IStorage {
         imageUrl: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600&q=80'
       },
       {
-        userId: '1', // Using string ID for Replit Auth compatibility
+        userId: 1, // Using numeric ID for custom auth
         plantId: 6, // ZZ Plant
         nickname: 'ZZ Plant',
         location: 'Bedroom',
@@ -577,7 +578,7 @@ export class MemStorage implements IStorage {
         imageUrl: 'https://images.unsplash.com/photo-1591454371758-644f9d123a81?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600&q=80'
       },
       {
-        userId: '1', // Using string ID for Replit Auth compatibility
+        userId: 1, // Using numeric ID for custom auth
         plantId: 7, // Calathea
         nickname: 'Calathea',
         location: 'Office',
