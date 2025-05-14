@@ -1,28 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { EnhancedUserPlant } from "@/types";
 import MyPlantCard from "@/components/my-plant-card";
 import CareStatusOverview from "@/components/care-status-overview";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuthContext } from "@/context/AuthContext";
 
 export default function MyCollection() {
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("last-watered");
-  const [, navigate] = useLocation();
-  const { isAuthenticated, showLoginDialog } = useAuthContext();
-  
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      showLoginDialog(() => {
-        // This callback will run after successful login
-      });
-    }
-  }, [isAuthenticated, showLoginDialog]);
   
   // Fetch user's plant collection
   const { data: userPlants, isLoading, error } = useQuery<EnhancedUserPlant[]>({

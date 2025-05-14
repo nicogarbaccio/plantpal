@@ -52,7 +52,7 @@ export default function Explore() {
                   <Input
                     type="text"
                     placeholder="Search plants by name or type..."
-                    className="w-full h-[50px] px-6 rounded-[12px] shadow-lg font-lato text-base"
+                    className="w-full p-6 rounded-[12px] shadow-lg font-lato text-base"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -65,7 +65,7 @@ export default function Explore() {
                 </div>
               </div>
               <div>
-                <Button className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white px-6 h-[50px] rounded-[12px] shadow-lg font-poppins flex items-center justify-center">
+                <Button className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white p-6 h-auto rounded-[12px] shadow-lg font-poppins">
                   Find Plants
                 </Button>
               </div>
