@@ -43,50 +43,53 @@ export default function Header() {
     <header className="bg-white shadow-md">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-8 w-8 text-primary mr-2 filter drop-shadow-[0_0_3px_#2ECC71]" 
-            viewBox="0 0 512 512"
-            stroke="currentColor"
-            fill="none"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M256 48c-79 0-192 122-192 240 0 57 24 90 48 112 33 30 77 44 144 44s111-14 144-44c24-22 48-55 48-112 0-118-113-240-192-240z" 
-            />
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M256 48v416" 
-            />
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M256 368c72-48 96-96 96-144" 
-            />
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M160 224c0 48 24 96 96 144" 
-            />
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M256 240c32-32 80-112 80-144" 
-            />
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M176 96c0 32 48 112 80 144" 
-            />
-          </svg>
+          <div className="bg-primary/10 p-1.5 rounded-full mr-2">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-7 w-7 text-primary filter drop-shadow-[0_0_2px_#2ECC71]" 
+              viewBox="0 0 512 512"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              fill="none"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M256 48c-79 0-192 122-192 240 0 57 24 90 48 112 33 30 77 44 144 44s111-14 144-44c24-22 48-55 48-112 0-118-113-240-192-240z" 
+              />
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M256 48v416" 
+              />
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M256 368c72-48 96-96 96-144" 
+              />
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M160 224c0 48 24 96 96 144" 
+              />
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M256 240c32-32 80-112 80-144" 
+              />
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M176 96c0 32 48 112 80 144" 
+              />
+            </svg>
+          </div>
           <Link href="/">
             <h1 className="text-2xl font-poppins font-semibold text-charcoal cursor-pointer">PlantPal</h1>
           </Link>
@@ -432,27 +435,13 @@ export default function Header() {
                   </Button>
                 ) : (
                   <Button 
-                    className="w-full mt-2 font-poppins" 
                     variant="outline" 
+                    className="w-full mt-2 font-poppins" 
                     onClick={() => {
                       login();
                       setIsMenuOpen(false);
                     }}
                   >
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      className="h-5 w-5 mr-2" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                    >
-                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                      <polyline points="10 17 15 12 10 7"></polyline>
-                      <line x1="15" y1="12" x2="3" y2="12"></line>
-                    </svg>
                     Sign in
                   </Button>
                 )}
