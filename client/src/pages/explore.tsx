@@ -65,7 +65,7 @@ export default function Explore() {
                 </div>
               </div>
               <div>
-                <Button className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white p-6 h-auto rounded-[12px] shadow-lg font-poppins">
+                <Button className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white p-6 h-[58px] rounded-[12px] shadow-lg font-poppins flex items-center justify-center">
                   Find Plants
                 </Button>
               </div>
