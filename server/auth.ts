@@ -11,7 +11,18 @@ import connectPgSimple from "connect-pg-simple";
 // Create a typed express User interface
 declare global {
   namespace Express {
-    interface User extends User {}
+    // Use the User type from schema but without creating a circular reference
+    interface User {
+      id: number;
+      username: string;
+      email: string | null;
+      password: string;
+      firstName: string | null;
+      lastName: string | null;
+      profileImageUrl: string | null;
+      createdAt: Date | null;
+      updatedAt: Date | null;
+    }
   }
 }
 
