@@ -3,51 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertPlantSchema, insertUserPlantSchema, insertWateringHistorySchema } from "@shared/schema";
 import { z } from "zod";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Set up authentication
-  await setupAuth(app);
-  
-  // User auth status endpoint
-  app.get('/api/auth/user', async (req, res) => {
-    if (req.isAuthenticated()) {
-      try {
-        // Get user info from the session
-        const user = req.user as any;
-        const userId = user.claims.sub;
-        
-        // Ensure user is stored in database
-        await storage.upsertUser({
-          id: userId,
-          username: user.claims.email || `user${userId}`,
-          email: user.claims.email,
-          firstName: user.claims.first_name,
-          lastName: user.claims.last_name,
-          profileImageUrl: user.claims.profile_image_url
-        });
-        
-        // Get updated user from database
-        const dbUser = await storage.getUser(userId);
-        
-        res.json({
-          ...dbUser,
-          isAuthenticated: true
-        });
-      } catch (error) {
-        console.error("Error processing user data:", error);
-        res.status(500).json({ message: "Error processing user data", isAuthenticated: true });
-      }
-    } else {
-      res.json({ isAuthenticated: false });
-    }
-  });
-  
-  // Check authentication status
-  app.get('/api/auth/status', (req, res) => {
-    res.json({ isAuthenticated: req.isAuthenticated() });
-  });
-  
   // put application routes here
   // prefix all routes with /api
 
@@ -116,10 +73,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's plant collection
-  app.get('/api/user-plants', isAuthenticated, async (req, res) => {
+  app.get('/api/user-plants', async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      // For simplicity, we're using user ID 1 (demo user)
+      const userId = 1;
       const userPlants = await storage.getUserPlants(userId);
       
       // Enhance user plants with their catalog plant information
@@ -137,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user plant by ID
-  app.get('/api/user-plants/:id', isAuthenticated, async (req, res) => {
+  app.get('/api/user-plants/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -147,13 +104,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
-      }
-      
-      // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
-      if (userPlant.userId !== userId) {
-        return res.status(403).json({ message: 'You do not have permission to view this plant' });
       }
       
       // Add the catalog plant information
@@ -166,10 +116,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add plant to user's collection
-  app.post('/api/user-plants', isAuthenticated, async (req, res) => {
+  app.post('/api/user-plants', async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      // For simplicity, we're using user ID 1 (demo user)
+      const userId = 1;
       
       const userPlantData = {
         ...insertUserPlantSchema.parse(req.body),
@@ -191,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user plant
-  app.patch('/api/user-plants/:id', isAuthenticated, async (req, res) => {
+  app.patch('/api/user-plants/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -201,13 +151,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
-      }
-      
-      // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
-      if (userPlant.userId !== userId) {
-        return res.status(403).json({ message: 'You do not have permission to update this plant' });
       }
       
       // Only allow updating certain fields
@@ -234,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete user plant
-  app.delete('/api/user-plants/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/user-plants/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -244,13 +187,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
-      }
-      
-      // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
-      if (userPlant.userId !== userId) {
-        return res.status(403).json({ message: 'You do not have permission to delete this plant' });
       }
       
       const deleted = await storage.deleteUserPlant(id);
@@ -265,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get watering history for a user plant
-  app.get('/api/user-plants/:id/watering-history', isAuthenticated, async (req, res) => {
+  app.get('/api/user-plants/:id/watering-history', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -275,13 +211,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
-      }
-      
-      // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
-      if (userPlant.userId !== userId) {
-        return res.status(403).json({ message: 'You do not have permission to view this plant' });
       }
       
       const wateringHistory = await storage.getWateringHistory(id);
@@ -292,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Water a plant
-  app.post('/api/user-plants/:id/water', isAuthenticated, async (req, res) => {
+  app.post('/api/user-plants/:id/water', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -302,13 +231,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPlant = await storage.getUserPlant(id);
       if (!userPlant) {
         return res.status(404).json({ message: 'User plant not found' });
-      }
-      
-      // Verify the user owns this plant
-      const user = req.user as any;
-      const userId = user.claims.sub;
-      if (userPlant.userId !== userId) {
-        return res.status(403).json({ message: 'You do not have permission to water this plant' });
       }
       
       const notes = req.body.notes || '';
@@ -328,10 +250,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get plants needing water
-  app.get('/api/plants-status/needs-water', isAuthenticated, async (req, res) => {
+  app.get('/api/plants-status/needs-water', async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      // For simplicity, we're using user ID 1 (demo user)
+      const userId = 1;
       const plants = await storage.getPlantsNeedingWater(userId);
       
       // Enhance user plants with their catalog plant information
@@ -349,10 +271,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get healthy plants
-  app.get('/api/plants-status/healthy', isAuthenticated, async (req, res) => {
+  app.get('/api/plants-status/healthy', async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      // For simplicity, we're using user ID 1 (demo user)
+      const userId = 1;
       const plants = await storage.getHealthyPlants(userId);
       
       // Enhance user plants with their catalog plant information
@@ -370,10 +292,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get plants with upcoming watering
-  app.get('/api/plants-status/upcoming', isAuthenticated, async (req, res) => {
+  app.get('/api/plants-status/upcoming', async (req, res) => {
     try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
+      // For simplicity, we're using user ID 1 (demo user)
+      const userId = 1;
       const plants = await storage.getUpcomingWateringPlants(userId);
       
       // Enhance user plants with their catalog plant information
@@ -387,84 +309,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(enhancedUserPlants);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching plants with upcoming watering' });
-    }
-  });
-
-  // Wishlist routes
-  app.get('/api/wishlist', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
-      
-      const wishlistItems = await storage.getWishlistWithPlants(userId);
-      res.json(wishlistItems);
-    } catch (error) {
-      console.error('Error fetching wishlist:', error);
-      res.status(500).json({ message: 'Error fetching wishlist' });
-    }
-  });
-  
-  app.post('/api/wishlist/:plantId', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
-      const plantId = parseInt(req.params.plantId);
-      
-      if (isNaN(plantId)) {
-        return res.status(400).json({ message: 'Invalid plant ID' });
-      }
-      
-      // Check if plant exists
-      const plant = await storage.getPlant(plantId);
-      if (!plant) {
-        return res.status(404).json({ message: 'Plant not found' });
-      }
-      
-      const wishlistItem = await storage.addToWishlist(userId, plantId);
-      res.status(201).json(wishlistItem);
-    } catch (error) {
-      console.error('Error adding to wishlist:', error);
-      res.status(500).json({ message: 'Error adding to wishlist' });
-    }
-  });
-  
-  app.delete('/api/wishlist/:plantId', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
-      const plantId = parseInt(req.params.plantId);
-      
-      if (isNaN(plantId)) {
-        return res.status(400).json({ message: 'Invalid plant ID' });
-      }
-      
-      const success = await storage.removeFromWishlist(userId, plantId);
-      if (success) {
-        res.status(200).json({ message: 'Plant removed from wishlist' });
-      } else {
-        res.status(404).json({ message: 'Plant not found in wishlist' });
-      }
-    } catch (error) {
-      console.error('Error removing from wishlist:', error);
-      res.status(500).json({ message: 'Error removing from wishlist' });
-    }
-  });
-  
-  app.get('/api/wishlist/check/:plantId', isAuthenticated, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const userId = user.claims.sub;
-      const plantId = parseInt(req.params.plantId);
-      
-      if (isNaN(plantId)) {
-        return res.status(400).json({ message: 'Invalid plant ID' });
-      }
-      
-      const isInWishlist = await storage.isInWishlist(userId, plantId);
-      res.json({ isInWishlist });
-    } catch (error) {
-      console.error('Error checking wishlist:', error);
-      res.status(500).json({ message: 'Error checking wishlist' });
     }
   });
 

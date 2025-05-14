@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import PlantGallery from "@/components/plant-gallery";
 import WaterProgress from "@/components/water-progress";
-import WishlistButton from "@/components/wishlist-button";
 import { queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 import { Plant, UserPlant, WateringHistory } from "@shared/schema";
@@ -17,7 +16,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { format, formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuthContext } from "@/context/AuthContext";
 
 export default function PlantDetail() {
   const [matchCatalog] = useRoute("/plants/:id");
@@ -92,25 +90,9 @@ export default function PlantDetail() {
   const userPlant = userPlantQuery.data;
   const wateringHistory = wateringHistoryQuery.data || [];
   
-  // Import useAuthContext
-  const { isAuthenticated, showLoginDialog } = useAuthContext();
-
   // Handle adding to collection
   const handleAddToCollection = () => {
     if (!catalogPlantQuery.data) return;
-    
-    // If user is not authenticated, show login dialog
-    if (!isAuthenticated) {
-      // Just open the login dialog with a success callback, 
-      // but don't redirect if it's cancelled
-      showLoginDialog(() => {
-        // This will only run if login is successful
-        navigate(`/my-collection/add?plantId=${catalogPlantQuery.data.id}`);
-      });
-      return;
-    }
-    
-    // If authenticated, navigate directly
     navigate(`/my-collection/add?plantId=${catalogPlantQuery.data.id}`);
   };
   
@@ -167,17 +149,8 @@ export default function PlantDetail() {
             </div>
           ) : (
             <>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h1 className="text-3xl font-semibold font-poppins mb-2">{isUserPlantView ? userPlant?.nickname : plant?.name}</h1>
-                  <p className="text-gray-500 text-sm font-lato italic mb-4">{plant?.botanicalName}</p>
-                </div>
-                {!isUserPlantView && plant?.id && (
-                  <div className="bg-white rounded-full shadow-sm p-1">
-                    <WishlistButton plantId={plant.id} showText size="default" variant="outline" />
-                  </div>
-                )}
-              </div>
+              <h1 className="text-3xl font-semibold font-poppins mb-2">{isUserPlantView ? userPlant?.nickname : plant?.name}</h1>
+              <p className="text-gray-500 text-sm font-lato italic mb-4">{plant?.botanicalName}</p>
               
               {isUserPlantView && userPlant?.location && (
                 <p className="text-gray-700 mb-4">
