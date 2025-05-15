@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { insertPlantSchema, insertUserPlantSchema, insertWateringHistorySchema } from "@shared/schema";
+import { storage } from "./storage.js";
+import { insertPlantSchema, insertUserPlantSchema, insertWateringHistorySchema, type UserPlant } from "../shared/schema.js";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -11,7 +11,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all plant categories
   app.get('/api/categories', async (req, res) => {
     try {
-      const categories = await storage.getCategories();
+      const categories = await storage.getAllCategories();
       res.json(categories);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching categories' });
@@ -21,7 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all plants
   app.get('/api/plants', async (req, res) => {
     try {
-      const plants = await storage.getPlants();
+      const plants = await storage.getAllPlants();
       res.json(plants);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching plants' });
@@ -77,11 +77,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // For simplicity, we're using user ID 1 (demo user)
       const userId = 1;
-      const userPlants = await storage.getUserPlants(userId);
+      const userPlants = await storage.getAllUserPlants(userId);
       
       // Enhance user plants with their catalog plant information
       const enhancedUserPlants = await Promise.all(
-        userPlants.map(async (userPlant) => {
+        userPlants.map(async (userPlant: UserPlant) => {
           const plant = await storage.getPlant(userPlant.plantId);
           return { ...userPlant, plant };
         })
@@ -165,10 +165,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const updatedUserPlant = await storage.updateUserPlant(id, updateData);
+      const currentUserPlant = await storage.getUserPlant(id);
+      if (!currentUserPlant) {
+        return res.status(404).json({ message: 'User plant not found' });
+      }
+      
+      const updatedUserPlant = await storage.updateUserPlant({
+        ...currentUserPlant,
+        ...updateData
+      });
       
       // Add the catalog plant information to the response
-      const plant = await storage.getPlant(updatedUserPlant!.plantId);
+      const plant = await storage.getPlant(updatedUserPlant.plantId);
       
       res.json({ ...updatedUserPlant, plant });
     } catch (error) {
