@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
-import { categories } from "../../shared/schema";
+import { categories } from "../../shared/schema.js";
 import * as dotenv from "dotenv";
 
 dotenv.config();
