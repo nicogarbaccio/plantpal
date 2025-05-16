@@ -9,6 +9,8 @@ import Explore from "@/pages/explore";
 import MyCollection from "@/pages/my-collection";
 import PlantDetail from "@/pages/plant-detail";
 import AddPlant from "@/pages/add-plant";
+import SignIn from "@/pages/signin";
+import SignUp from "@/pages/signup";
 
 function Router() {
   return (
@@ -19,6 +21,8 @@ function Router() {
       <Route path="/plants/:id" component={PlantDetail} />
       <Route path="/my-collection/add" component={AddPlant} />
       <Route path="/my-collection/:id" component={PlantDetail} />
+      <Route path="/signin" component={SignIn} />
+      <Route path="/signup" component={SignUp} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
