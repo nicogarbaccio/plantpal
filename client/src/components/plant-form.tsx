@@ -1,5 +1,6 @@
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
+import { format, addDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -28,8 +29,32 @@ const formSchema = z.object({
   nickname: z.string().min(1, "Nickname is required"),
   location: z.string().min(1, "Location is required"),
   wateringFrequency: z.number().min(1, "Watering frequency is required"),
-  notes: z.string().optional(),
-  imageUrl: z.string().optional(),
+  notes: z
+    .string()
+    .optional()
+    .transform((val) => val || undefined),
+  imageUrl: z
+    .string()
+    .optional()
+    .transform((val) => val || undefined),
+  // Add date fields with validation
+  lastWatered: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return format(new Date(), "yyyy-MM-dd");
+      return val;
+    }),
+  nextWaterDate: z
+    .string()
+    .optional()
+    .transform((val, ctx) => {
+      if (!val && ctx.data.wateringFrequency) {
+        const date = new Date();
+        return format(addDays(date, ctx.data.wateringFrequency), "yyyy-MM-dd");
+      }
+      return val;
+    }),
 });
 
 interface PlantFormProps {
@@ -41,18 +66,18 @@ interface PlantFormProps {
   isEdit?: boolean;
 }
 
-export default function PlantForm({ 
-  form, 
-  plants, 
-  isLoading, 
-  onSubmit, 
-  submitText, 
-  isEdit = false 
+export default function PlantForm({
+  form,
+  plants,
+  isLoading,
+  onSubmit,
+  submitText,
+  isEdit = false,
 }: PlantFormProps) {
   // Get selected plant details
   const selectedPlantId = form.watch("plantId");
-  const selectedPlant = plants?.find(p => p.id === selectedPlantId);
-  
+  const selectedPlant = plants?.find((p) => p.id === selectedPlantId);
+
   // Common form locations for the dropdown
   const commonLocations = [
     "Living Room",
@@ -63,9 +88,9 @@ export default function PlantForm({
     "Balcony",
     "Patio",
     "Hallway",
-    "Dining Room"
+    "Dining Room",
   ];
-  
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -82,7 +107,9 @@ export default function PlantForm({
                   <>
                     <Select
                       disabled={isLoading}
-                      onValueChange={(value) => field.onChange(parseInt(value, 10))}
+                      onValueChange={(value) =>
+                        field.onChange(parseInt(value, 10))
+                      }
                       value={field.value?.toString() || ""}
                       defaultValue={field.value?.toString() || ""}
                     >
@@ -93,7 +120,10 @@ export default function PlantForm({
                       </FormControl>
                       <SelectContent>
                         {plants?.map((plant) => (
-                          <SelectItem key={plant.id} value={plant.id.toString()}>
+                          <SelectItem
+                            key={plant.id}
+                            value={plant.id.toString()}
+                          >
                             {plant.name} ({plant.botanicalName})
                           </SelectItem>
                         ))}
@@ -119,9 +149,7 @@ export default function PlantForm({
               <FormControl>
                 <Input placeholder="What do you call this plant?" {...field} />
               </FormControl>
-              <FormDescription>
-                Give your plant a personal name
-              </FormDescription>
+              <FormDescription>Give your plant a personal name</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -168,16 +196,18 @@ export default function PlantForm({
             <FormItem>
               <FormLabel>Watering Frequency (days)</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  min={1} 
-                  {...field} 
-                  onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)} 
+                <Input
+                  type="number"
+                  min={1}
+                  {...field}
+                  onChange={(e) =>
+                    field.onChange(parseInt(e.target.value, 10) || 0)
+                  }
                 />
               </FormControl>
               <FormDescription>
-                {selectedPlant 
-                  ? `Recommended: ${selectedPlant.wateringFrequency} days` 
+                {selectedPlant
+                  ? `Recommended: ${selectedPlant.wateringFrequency} days`
                   : "How often does this plant need watering?"}
               </FormDescription>
               <FormMessage />
@@ -209,10 +239,10 @@ export default function PlantForm({
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Any special care instructions or notes..." 
-                  className="min-h-[100px]" 
-                  {...field} 
+                <Textarea
+                  placeholder="Any special care instructions or notes..."
+                  className="min-h-[100px]"
+                  {...field}
                 />
               </FormControl>
               <FormDescription>
@@ -224,8 +254,8 @@ export default function PlantForm({
         />
 
         <div className="flex justify-end">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="bg-primary hover:bg-primary/90 text-white px-6 rounded-[12px]"
             disabled={isLoading}
           >

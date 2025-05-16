@@ -287,31 +287,75 @@ class DatabaseStorage implements Storage {
 
   async createUserPlant(insertUserPlant: InsertUserPlant): Promise<UserPlant> {
     try {
-      const now = new Date();
-      const lastWatered = format(now, 'yyyy-MM-dd');
-      const nextWaterDate = format(addDays(now, insertUserPlant.wateringFrequency), 'yyyy-MM-dd');
+      // Validate that the plant exists first
+      const plant = await client.query('SELECT id FROM plants WHERE id = $1', [insertUserPlant.plantId]);
+      if (plant.rows.length === 0) {
+        throw new Error(`Plant with id ${insertUserPlant.plantId} not found`);
+      }
 
+      // Handle dates consistently
+      const now = new Date();
+      const formattedLastWatered = format(
+        insertUserPlant.lastWatered ? new Date(insertUserPlant.lastWatered) : now,
+        'yyyy-MM-dd'
+      );
+      const formattedNextWaterDate = format(
+        insertUserPlant.nextWaterDate 
+          ? new Date(insertUserPlant.nextWaterDate)
+          : addDays(now, insertUserPlant.wateringFrequency),
+        'yyyy-MM-dd'
+      );
+
+      // Validate required fields
+      if (!insertUserPlant.nickname?.trim()) {
+        throw new Error('Required field missing: nickname');
+      }
+      if (!insertUserPlant.location?.trim()) {
+        throw new Error('Required field missing: location');
+      }
+      
+      console.log('Creating user plant with data:', {
+        ...insertUserPlant,
+        lastWatered: formattedLastWatered,
+        nextWaterDate: formattedNextWaterDate
+      });
+
+      // Insert the user plant with proper date handling
       const result = await client.query(
         'INSERT INTO user_plants (user_id, plant_id, nickname, location, last_watered, watering_frequency, next_water_date, image_url, notes, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
         [
           insertUserPlant.userId,
           insertUserPlant.plantId,
-          insertUserPlant.nickname,
-          insertUserPlant.location,
-          lastWatered,
+          insertUserPlant.nickname.trim(),
+          insertUserPlant.location.trim(),
+          formattedLastWatered,
           insertUserPlant.wateringFrequency,
-          nextWaterDate,
-          insertUserPlant.imageUrl,
-          insertUserPlant.notes,
+          formattedNextWaterDate,
+          insertUserPlant.imageUrl?.trim() || null,
+          insertUserPlant.notes?.trim() || null,
           now
         ]
       );
 
-      const row = result.rows[0];
-      return mapUserPlantRow(row);
-    } catch (error) {
-      console.error('Error creating user plant:', error);
-      throw error;
+      if (!result.rows[0]) {
+        throw new Error('Failed to create user plant - no row returned');
+      }
+
+      return mapUserPlantRow(result.rows[0]);
+    } catch (error: any) {
+      // Improve error messages for common database errors
+      console.error('Database error details:', error);
+      
+      if (error.code === '23503') {
+        throw new Error('Invalid plant or user reference');
+      } else if (error.code === '23502') {
+        throw new Error(`Required field missing: ${error.column}`);
+      } else if (error.message.includes('not found') || error.message.includes('Required field')) {
+        throw error; // Preserve these specific error messages
+      } else {
+        console.error('Unexpected error in createUserPlant:', error);
+        throw new Error('Database error occurred while creating user plant');
+      }
     }
   }
 

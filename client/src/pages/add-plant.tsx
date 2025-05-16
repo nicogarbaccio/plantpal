@@ -44,30 +44,32 @@ export default function AddPlant() {
   const [, navigate] = useLocation();
   const search = useSearch();
   const searchParams = new URLSearchParams(search);
-  const preselectedPlantId = searchParams.get("plantId") ? parseInt(searchParams.get("plantId")!) : undefined;
-  
+  const preselectedPlantId = searchParams.get("plantId")
+    ? parseInt(searchParams.get("plantId")!)
+    : undefined;
+
   // Fetch catalog plants
   const { data: plants, isLoading: plantsLoading } = useQuery<Plant[]>({
-    queryKey: ['/api/plants'],
+    queryKey: ["/api/plants"],
   });
-  
+
   // Set up form with preselected plant if available
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       plantId: preselectedPlantId || 0,
       nickname: "",
-      location: "",
-      wateringFrequency: 0,
+      location: "Living Room", // Set a default location
+      wateringFrequency: 7, // Default to weekly watering
       notes: "",
       imageUrl: "",
     },
   });
-  
+
   // Get selected plant details when plantId changes
   const selectedPlantId = form.watch("plantId");
-  const selectedPlant = plants?.find(p => p.id === selectedPlantId);
-  
+  const selectedPlant = plants?.find((p) => p.id === selectedPlantId);
+
   // Update watering frequency when a plant is selected
   useEffect(() => {
     if (selectedPlant && !form.getValues("wateringFrequency")) {
@@ -80,11 +82,20 @@ export default function AddPlant() {
       form.setValue("imageUrl", selectedPlant.imageUrl || "");
     }
   }, [selectedPlant, form]);
-  
+
   // Add plant mutation
   const addPlantMutation = useMutation({
     mutationFn: async (data: AddPlantFormData) => {
       const response = await apiRequest("POST", "/api/user-plants", data);
+      if (!response.ok) {
+        const error = await response.json();
+        if (error.errors) {
+          // Format validation errors
+          throw new Error(`Validation failed:\n${error.errors.join("\n")}`);
+        } else {
+          throw new Error(error.message || "Failed to add plant");
+        }
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -92,37 +103,65 @@ export default function AddPlant() {
         title: "Plant added!",
         description: "Your plant has been added to your collection.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/user-plants'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user-plants"] });
       navigate("/my-collection");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error("Failed to add plant:", error);
       toast({
         title: "Error",
-        description: "Failed to add plant. Please try again.",
+        description: error.message || "Failed to add plant. Please try again.",
         variant: "destructive",
       });
-    }
+    },
   });
-  
+
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    // Set today as the last watered date if not provided
+    // Format dates properly
+    const now = new Date();
+    const nextWaterDate = new Date();
+    nextWaterDate.setDate(now.getDate() + data.wateringFrequency);
+
     const formData: AddPlantFormData = {
       ...data,
-      lastWatered: new Date(),
+      // Format dates as YYYY-MM-DD strings for the server
+      lastWatered: now.toISOString().split("T")[0],
+      nextWaterDate: nextWaterDate.toISOString().split("T")[0],
+      wateringFrequency: Math.max(1, data.wateringFrequency), // Ensure positive watering frequency
+      // Clean up optional fields
+      notes: data.notes?.trim() || undefined,
+      imageUrl: data.imageUrl?.trim() || undefined,
     };
-    
+
+    // Validate required fields
+    if (
+      !formData.plantId ||
+      !formData.nickname ||
+      !formData.location ||
+      !formData.wateringFrequency
+    ) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
     addPlantMutation.mutate(formData);
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-3xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-poppins">Add New Plant</CardTitle>
+            <CardTitle className="text-2xl font-poppins">
+              Add New Plant
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <PlantForm 
+            <PlantForm
               form={form}
               plants={plants}
               isLoading={plantsLoading || addPlantMutation.isPending}

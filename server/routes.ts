@@ -218,22 +218,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add plant to user's collection
   app.post('/api/user-plants', async (req: Request & { user?: { userId: number } }, res) => {
     try {
-      const userPlantData = {
-        ...insertUserPlantSchema.parse(req.body),
+      // Log raw request data
+      console.log('Raw request body:', req.body);
+      console.log('User ID from token:', req.user?.userId);
+      
+      // Add userId to the request body before validation
+      const requestData = {
+        ...req.body,
         userId: req.user!.userId
       };
       
+      // Parse and validate the request body
+      const userPlantData = insertUserPlantSchema.parse(requestData);
+      
+      // Log validated data
+      console.log('Validated data after parsing:', userPlantData);
+      
+      // Create the user plant
       const newUserPlant = await storage.createUserPlant(userPlantData);
+      
+      // Log result
+      console.log('Successfully created plant:', newUserPlant);
       
       // Add the catalog plant information to the response
       const plant = await storage.getPlant(newUserPlant.plantId);
       
       res.status(201).json({ ...newUserPlant, plant });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error creating user plant:', {
+        error: error,
+        message: error.message,
+        stack: error.stack
+      });
+
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid user plant data', errors: error.errors });
+        // Handle validation errors
+        const formattedErrors = error.errors.map(e => `${e.path.join('.')}: ${e.message}`);
+        return res.status(400).json({ 
+          message: 'Invalid user plant data', 
+          errors: formattedErrors 
+        });
+      } else if (error.message.includes('not found')) {
+        // Handle missing plant errors
+        return res.status(404).json({ 
+          message: error.message 
+        });
+      } else if (error.message.includes('Required field')) {
+        // Handle missing required fields
+        return res.status(400).json({ 
+          message: error.message 
+        });
+      } else {
+        // Handle all other errors
+        // Send appropriate error response based on error type
+        const errorMessage = error.message?.toLowerCase() || '';
+        if (errorMessage.includes('not found')) {
+          return res.status(404).json({ message: error.message });
+        } else if (errorMessage.includes('missing required field')) {
+          return res.status(400).json({ message: error.message });
+        } else {
+          return res.status(500).json({ message: 'Failed to create user plant. Please try again.' });
+        }
       }
-      res.status(500).json({ message: 'Error adding plant to collection' });
     }
   });
 

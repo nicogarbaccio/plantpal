@@ -44,11 +44,11 @@ export const userPlants = pgTable("user_plants", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   plantId: integer("plant_id").notNull(),
-  nickname: text("nickname"),
-  location: text("location"),
-  lastWatered: date("last_watered"),
-  wateringFrequency: integer("watering_frequency").notNull(), // Days between watering, can be customized by user
-  nextWaterDate: date("next_water_date"),
+  nickname: text("nickname").notNull(),  // Required in form
+  location: text("location").notNull(),  // Required in form
+  lastWatered: date("last_watered").notNull(), // Set by server if not provided
+  wateringFrequency: integer("watering_frequency").notNull(),
+  nextWaterDate: date("next_water_date").notNull(), // Set by server if not provided
   imageUrl: text("image_url"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),

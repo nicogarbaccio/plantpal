@@ -28,14 +28,17 @@ export default function MyCollection() {
   // Fetch plants status for care overview
   const { data: needsWaterPlants } = useQuery<EnhancedUserPlant[]>({
     queryKey: ["/api/plants-status/needs-water"],
+    retry: false,
   });
 
   const { data: healthyPlants } = useQuery<EnhancedUserPlant[]>({
     queryKey: ["/api/plants-status/healthy"],
+    retry: false,
   });
 
   const { data: upcomingPlants } = useQuery<EnhancedUserPlant[]>({
     queryKey: ["/api/plants-status/upcoming"],
+    retry: false,
   });
 
   // Filter and sort the plants based on selected options
@@ -49,9 +52,11 @@ export default function MyCollection() {
           return true;
         if (filter === "recently-added") {
           // Consider plants added in the last 7 days as "recently added"
+          if (!plant.createdAt) return false;
           const sevenDaysAgo = new Date();
           sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-          return new Date(plant.createdAt) >= sevenDaysAgo;
+          const createdAtDate = new Date(plant.createdAt);
+          return createdAtDate >= sevenDaysAgo;
         }
         return false;
       })
@@ -60,10 +65,9 @@ export default function MyCollection() {
   // Sort the filtered plants
   const sortedPlants = [...filteredPlants].sort((a, b) => {
     if (sortBy === "last-watered") {
-      return (
-        new Date(b.lastWatered || 0).getTime() -
-        new Date(a.lastWatered || 0).getTime()
-      );
+      const dateA = a.lastWatered ? new Date(a.lastWatered) : new Date(0);
+      const dateB = b.lastWatered ? new Date(b.lastWatered) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
     }
     if (sortBy === "name") {
       return (a.nickname || a.plant?.name || "").localeCompare(
@@ -71,16 +75,14 @@ export default function MyCollection() {
       );
     }
     if (sortBy === "next-water-date") {
-      return (
-        new Date(a.nextWaterDate || 0).getTime() -
-        new Date(b.nextWaterDate || 0).getTime()
-      );
+      const dateA = a.nextWaterDate ? new Date(a.nextWaterDate) : new Date(0);
+      const dateB = b.nextWaterDate ? new Date(b.nextWaterDate) : new Date(0);
+      return dateA.getTime() - dateB.getTime();
     }
     if (sortBy === "recently-added") {
-      return (
-        new Date(b.createdAt || 0).getTime() -
-        new Date(a.createdAt || 0).getTime()
-      );
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
     }
     return 0;
   });
@@ -221,16 +223,26 @@ export default function MyCollection() {
                   />
                 </svg>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No plants in your collection
+                  {!userPlants?.length
+                    ? "No plants in your collection"
+                    : filter === "needs-water"
+                    ? "No plants need water right now"
+                    : filter === "recently-added"
+                    ? "No plants added in the last 7 days"
+                    : "No plants match the current filter"}
                 </h3>
                 <p className="text-gray-500 mb-6">
-                  Start adding plants to track their care schedule
+                  {!userPlants?.length
+                    ? "Start adding plants to track their care schedule"
+                    : "Try adjusting your filter settings"}
                 </p>
-                <Link href="/my-collection/add">
-                  <Button className="bg-primary hover:bg-primary/90 text-white rounded-[12px]">
-                    Add Your First Plant
-                  </Button>
-                </Link>
+                {!userPlants?.length && (
+                  <Link href="/my-collection/add">
+                    <Button className="bg-primary hover:bg-primary/90 text-white rounded-[12px]">
+                      Add Your First Plant
+                    </Button>
+                  </Link>
+                )}
               </div>
             ) : (
               sortedPlants.map((plant) => (

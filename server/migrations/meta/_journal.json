@@ -15,6 +15,13 @@
       "when": 1747418677815,
       "tag": "0001_purple_the_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1747422098533,
+      "tag": "0002_goofy_marvel_boy",
+      "breakpoints": true
     }
   ]
 }

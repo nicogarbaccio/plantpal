@@ -26,8 +26,8 @@ export interface AddPlantFormData {
   wateringFrequency: number;
   notes?: string;
   imageUrl?: string;
-  lastWatered?: Date;
-  nextWaterDate?: Date;
+  lastWatered?: string;  // ISO date string YYYY-MM-DD
+  nextWaterDate?: string;  // ISO date string YYYY-MM-DD
 }
 
 export interface WaterPlantFormData {
