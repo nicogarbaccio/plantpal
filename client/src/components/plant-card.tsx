@@ -81,7 +81,7 @@ export default function PlantCard({ plant }: PlantCardProps) {
             <div className="flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-yellow-400 mr-2"
+                className="h-5 w-5 text-yellow-400 mr-2 flex-shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -93,8 +93,11 @@ export default function PlantCard({ plant }: PlantCardProps) {
                   d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
                 />
               </svg>
-              <span className="text-sm font-lato">
-                Needs {plant.lightRequirements.toLowerCase()}
+              <span
+                className="text-sm font-lato truncate max-w-[180px]"
+                title={plant.lightRequirements}
+              >
+                {plant.lightRequirements}
               </span>
             </div>
             <div className="flex items-center">
