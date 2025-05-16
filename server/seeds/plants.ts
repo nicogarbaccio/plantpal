@@ -19,7 +19,7 @@ const popularPlants = [
     name: "Snake Plant",
     botanicalName: "Sansevieria trifasciata",
     description: "One of the most tolerant houseplants. Excellent air purifier and perfect for beginners.",
-    imageUrl: "https://example.com/snake-plant.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1658197912858-367ddfa43a0b?q=80&w=1000&auto=format&fit=crop",
     wateringFrequency: 14, // Water every 2 weeks
     lightRequirements: "Low to bright indirect light",
     difficulty: "Easy",
@@ -29,7 +29,7 @@ const popularPlants = [
     name: "Monstera Deliciosa",
     botanicalName: "Monstera deliciosa",
     description: "Known for its dramatic leaves with natural holes, this tropical plant is a popular choice for making a statement.",
-    imageUrl: "https://example.com/monstera.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?q=80&w=1000&auto=format&fit=crop",
     wateringFrequency: 7, // Water weekly
     lightRequirements: "Bright indirect light",
     difficulty: "Moderate",
@@ -39,7 +39,7 @@ const popularPlants = [
     name: "Pothos",
     botanicalName: "Epipremnum aureum",
     description: "A trailing vine with heart-shaped leaves, known for being nearly indestructible.",
-    imageUrl: "https://example.com/pothos.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1607931042288-0c82960d4afc?q=80&w=1000&auto=format&fit=crop",
     wateringFrequency: 7, // Water weekly
     lightRequirements: "Low to bright indirect light",
     difficulty: "Easy",
@@ -49,7 +49,7 @@ const popularPlants = [
     name: "Peace Lily",
     botanicalName: "Spathiphyllum",
     description: "Elegant white flowers and glossy leaves. Great air purifier and humidity lover.",
-    imageUrl: "https://example.com/peace-lily.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1593691509543-c55fb32e7355?q=80&w=1000&auto=format&fit=crop",
     wateringFrequency: 7, // Water weekly
     lightRequirements: "Low to medium indirect light",
     difficulty: "Easy",
@@ -59,7 +59,7 @@ const popularPlants = [
     name: "ZZ Plant",
     botanicalName: "Zamioculcas zamiifolia",
     description: "Virtually indestructible plant with glossy leaves. Perfect for offices and low-light conditions.",
-    imageUrl: "https://example.com/zz-plant.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1572688484438-313a6e50c333?q=80&w=1000&auto=format&fit=crop",
     wateringFrequency: 14, // Water every 2 weeks
     lightRequirements: "Low to bright indirect light",
     difficulty: "Easy",
@@ -69,7 +69,7 @@ const popularPlants = [
     name: "Spider Plant",
     botanicalName: "Chlorophytum comosum",
     description: "Fast-growing plant that produces babies (plantlets) on long stems. Great air purifier.",
-    imageUrl: "https://example.com/spider-plant.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1572688469351-947230df2467?q=80&w=1000&auto=format&fit=crop",
     wateringFrequency: 7, // Water weekly
     lightRequirements: "Moderate to bright indirect light",
     difficulty: "Easy",

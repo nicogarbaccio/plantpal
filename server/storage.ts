@@ -6,15 +6,31 @@ import {
   categories, Category, InsertCategory
 } from "../shared/schema.js";
 import { addDays, format } from "date-fns";
+import { client } from './database.js';
 
-// Modify the interface with any CRUD methods
-// you might need
+// Helper function to map user plant database row to UserPlant object
+const mapUserPlantRow = (row: any): UserPlant => ({
+  id: row.id,
+  userId: row.user_id,
+  plantId: row.plant_id,
+  nickname: row.nickname,
+  location: row.location,
+  lastWatered: row.last_watered,
+  wateringFrequency: row.watering_frequency,
+  nextWaterDate: row.next_water_date,
+  imageUrl: row.image_url,
+  notes: row.notes,
+  createdAt: row.created_at
+});
+
+// Database interface for plant operations
 interface Storage {
   createPlant(insertPlant: InsertPlant): Promise<Plant>;
   getPlant(id: number): Promise<Plant | null>;
   getAllPlants(): Promise<Plant[]>;
   getCategory(name: string): Promise<Category | null>;
   updateCategory(category: Category): Promise<Category>;
+  createUserPlant(insertUserPlant: InsertUserPlant): Promise<UserPlant>;
   getUserPlant(id: number): Promise<UserPlant | null>;
   updateUserPlant(userPlant: UserPlant): Promise<UserPlant>;
   getAllCategories(): Promise<Category[]>;
@@ -27,42 +43,83 @@ interface Storage {
   getUpcomingWateringPlants(userId: number): Promise<UserPlant[]>;
 }
 
-import { client, db } from './database.js';
-
-class InMemoryStorage implements Storage {
-  private plants: Plant[] = [];
-  private users: User[] = [];
-  private userPlants: UserPlant[] = [];
-  private wateringHistory: WateringHistory[] = [];
-  private nextId = 1;
+class DatabaseStorage implements Storage {
 
   async createPlant(insertPlant: InsertPlant): Promise<Plant> {
-    const id = this.nextId++;
-    const plant: Plant = {
-      ...insertPlant,
-      id,
-      imageUrl: insertPlant.imageUrl ?? null
-    };
-    this.plants.push(plant);
-
-    const category = await this.getCategory(insertPlant.category);
-    if (category) {
-      const updatedCategory = {
-        ...category,
-        plantCount: (category.plantCount || 0) + 1
+    try {
+      const result = await client.query(
+        'INSERT INTO plants (name, botanical_name, description, image_url, watering_frequency, light_requirements, difficulty, category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+        [
+          insertPlant.name,
+          insertPlant.botanicalName,
+          insertPlant.description,
+          insertPlant.imageUrl,
+          insertPlant.wateringFrequency,
+          insertPlant.lightRequirements,
+          insertPlant.difficulty,
+          insertPlant.category
+        ]
+      );
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        name: row.name,
+        botanicalName: row.botanical_name,
+        description: row.description,
+        imageUrl: row.image_url,
+        wateringFrequency: row.watering_frequency,
+        lightRequirements: row.light_requirements,
+        difficulty: row.difficulty,
+        category: row.category
       };
-      await this.updateCategory(updatedCategory);
+    } catch (error) {
+      console.error('Error creating plant:', error);
+      throw error;
     }
-
-    return plant;
   }
 
   async getPlant(id: number): Promise<Plant | null> {
-    return this.plants.find(p => p.id === id) ?? null;
+    try {
+      const result = await client.query('SELECT * FROM plants WHERE id = $1', [id]);
+      if (result.rows.length === 0) {
+        return null;
+      }
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        name: row.name,
+        botanicalName: row.botanical_name,
+        description: row.description,
+        imageUrl: row.image_url,
+        wateringFrequency: row.watering_frequency,
+        lightRequirements: row.light_requirements,
+        difficulty: row.difficulty,
+        category: row.category
+      };
+    } catch (error) {
+      console.error('Error fetching plant:', error);
+      return null;
+    }
   }
 
   async getAllPlants(): Promise<Plant[]> {
-    return this.plants;
+    try {
+      const result = await client.query('SELECT * FROM plants');
+      return result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        botanicalName: row.botanical_name,
+        description: row.description,
+        imageUrl: row.image_url,
+        wateringFrequency: row.watering_frequency,
+        lightRequirements: row.light_requirements,
+        difficulty: row.difficulty,
+        category: row.category
+      }));
+    } catch (error) {
+      console.error('Error fetching plants:', error);
+      return [];
+    }
   }
 
   async getCategory(name: string): Promise<Category | null> {
@@ -109,91 +166,87 @@ class InMemoryStorage implements Storage {
   }
 
   async createUserPlant(insertUserPlant: InsertUserPlant): Promise<UserPlant> {
-    const id = this.nextId++;
-    const now = new Date();
-    const lastWatered = format(now, 'yyyy-MM-dd');
-    const nextWaterDate = format(addDays(now, insertUserPlant.wateringFrequency), 'yyyy-MM-dd');
+    try {
+      const now = new Date();
+      const lastWatered = format(now, 'yyyy-MM-dd');
+      const nextWaterDate = format(addDays(now, insertUserPlant.wateringFrequency), 'yyyy-MM-dd');
 
-    const userPlant: UserPlant = {
-      ...insertUserPlant,
-      id,
-      imageUrl: insertUserPlant.imageUrl ?? null,
-      nickname: insertUserPlant.nickname ?? null,
-      location: insertUserPlant.location ?? null,
-      lastWatered,
-      nextWaterDate,
-      notes: insertUserPlant.notes ?? null,
-      createdAt: now
-    };
-    this.userPlants.push(userPlant);
-    return userPlant;
+      const result = await client.query(
+        'INSERT INTO user_plants (user_id, plant_id, nickname, location, last_watered, watering_frequency, next_water_date, image_url, notes, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+        [
+          insertUserPlant.userId,
+          insertUserPlant.plantId,
+          insertUserPlant.nickname,
+          insertUserPlant.location,
+          lastWatered,
+          insertUserPlant.wateringFrequency,
+          nextWaterDate,
+          insertUserPlant.imageUrl,
+          insertUserPlant.notes,
+          now
+        ]
+      );
+
+      const row = result.rows[0];
+      return mapUserPlantRow(row);
+    } catch (error) {
+      console.error('Error creating user plant:', error);
+      throw error;
+    }
   }
 
   async getUserPlant(id: number): Promise<UserPlant | null> {
-    return this.userPlants.find(p => p.id === id) ?? null;
+    try {
+      const result = await client.query('SELECT * FROM user_plants WHERE id = $1', [id]);
+      if (result.rows.length === 0) {
+        return null;
+      }
+      return mapUserPlantRow(result.rows[0]);
+    } catch (error) {
+      console.error('Error fetching user plant:', error);
+      return null;
+    }
   }
 
   async updateUserPlant(userPlant: UserPlant): Promise<UserPlant> {
-    const index = this.userPlants.findIndex(p => p.id === userPlant.id);
-    if (index === -1) {
-      throw new Error("User plant not found");
-    }
-    this.userPlants[index] = userPlant;
-    return userPlant;
-  }
-
-  async createWateringHistory(insertWatering: InsertWateringHistory): Promise<WateringHistory> {
-    const id = this.nextId++;
-    const watering: WateringHistory = {
-      ...insertWatering,
-      id,
-      notes: insertWatering.notes ?? null
-    };
-    this.wateringHistory.push(watering);
-    return watering;
-  }
-
-  async waterPlant(userPlantId: number, notes?: string): Promise<void> {
-    const userPlant = await this.getUserPlant(userPlantId);
-    if (!userPlant) {
-      throw new Error("User plant not found");
-    }
-
-    const today = new Date();
-    await this.updateUserPlant({
-      ...userPlant,
-      lastWatered: format(today, 'yyyy-MM-dd'),
-      nextWaterDate: format(addDays(today, userPlant.wateringFrequency), 'yyyy-MM-dd')
-    });
-
-    await this.createWateringHistory({
-      userPlantId,
-      wateredDate: format(today, 'yyyy-MM-dd'),
-      notes: notes ?? null
-    });
-  }
-
-  async createCategory(insertCategory: InsertCategory): Promise<Category> {
     try {
       const result = await client.query(
-        'INSERT INTO categories (name, description, image_url, plant_count) VALUES ($1, $2, $3, $4) RETURNING *',
+        'UPDATE user_plants SET user_id = $1, plant_id = $2, nickname = $3, location = $4, last_watered = $5, watering_frequency = $6, next_water_date = $7, image_url = $8, notes = $9, created_at = $10 WHERE id = $11 RETURNING *',
         [
-          insertCategory.name,
-          insertCategory.description,
-          insertCategory.imageUrl ?? null,
-          insertCategory.plantCount ?? 0
+          userPlant.userId,
+          userPlant.plantId,
+          userPlant.nickname,
+          userPlant.location,
+          userPlant.lastWatered,
+          userPlant.wateringFrequency,
+          userPlant.nextWaterDate,
+          userPlant.imageUrl,
+          userPlant.notes,
+          userPlant.createdAt,
+          userPlant.id
         ]
       );
+      
+      if (result.rows.length === 0) {
+        throw new Error("User plant not found");
+      }
+      
       const row = result.rows[0];
       return {
         id: row.id,
-        name: row.name,
-        description: row.description,
+        userId: row.user_id,
+        plantId: row.plant_id,
+        nickname: row.nickname,
+        location: row.location,
+        lastWatered: row.last_watered,
+        wateringFrequency: row.watering_frequency,
+        nextWaterDate: row.next_water_date,
         imageUrl: row.image_url,
-        plantCount: row.plant_count
+        notes: row.notes,
+        createdAt: row.created_at
       };
     } catch (error) {
-      console.error('Error creating category:', error);
+      console.error('Error updating user plant:', error);
       throw error;
     }
   }
@@ -215,55 +268,139 @@ class InMemoryStorage implements Storage {
   }
 
   async getPlantsByCategory(category: string): Promise<Plant[]> {
-    return this.plants.filter(p => p.category === category);
+    try {
+      const result = await client.query('SELECT * FROM plants WHERE category = $1', [category]);
+      return result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        botanicalName: row.botanical_name,
+        description: row.description,
+        imageUrl: row.image_url,
+        wateringFrequency: row.watering_frequency,
+        lightRequirements: row.light_requirements,
+        difficulty: row.difficulty,
+        category: row.category
+      }));
+    } catch (error) {
+      console.error('Error fetching plants by category:', error);
+      return [];
+    }
   }
 
   async getAllUserPlants(userId: number): Promise<UserPlant[]> {
-    return this.userPlants.filter(p => p.userId === userId);
+    try {
+      const result = await client.query('SELECT * FROM user_plants WHERE user_id = $1', [userId]);
+      return result.rows.map(mapUserPlantRow);
+    } catch (error) {
+      console.error('Error fetching user plants:', error);
+      return [];
+    }
   }
 
   async deleteUserPlant(id: number): Promise<boolean> {
-    const index = this.userPlants.findIndex(p => p.id === id);
-    if (index === -1) {
+    try {
+      const result = await client.query('DELETE FROM user_plants WHERE id = $1', [id]);
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting user plant:', error);
       return false;
     }
-    this.userPlants.splice(index, 1);
-    return true;
   }
 
   async getWateringHistory(userPlantId: number): Promise<WateringHistory[]> {
-    return this.wateringHistory.filter(w => w.userPlantId === userPlantId);
+    try {
+      const result = await client.query('SELECT * FROM watering_history WHERE user_plant_id = $1', [userPlantId]);
+      return result.rows.map(row => ({
+        id: row.id,
+        userPlantId: row.user_plant_id,
+        wateredDate: row.watered_date,
+        notes: row.notes
+      }));
+    } catch (error) {
+      console.error('Error fetching watering history:', error);
+      return [];
+    }
   }
 
   async getPlantsNeedingWater(userId: number): Promise<UserPlant[]> {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    return this.userPlants.filter(p => 
-      p.userId === userId && 
-      p.nextWaterDate != null && 
-      p.nextWaterDate <= today
-    );
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const result = await client.query(
+        'SELECT * FROM user_plants WHERE user_id = $1 AND next_water_date <= $2',
+        [userId, today]
+      );
+      return result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        plantId: row.plant_id,
+        nickname: row.nickname,
+        location: row.location,
+        lastWatered: row.last_watered,
+        wateringFrequency: row.watering_frequency,
+        nextWaterDate: row.next_water_date,
+        imageUrl: row.image_url,
+        notes: row.notes,
+        createdAt: row.created_at
+      }));
+    } catch (error) {
+      console.error('Error fetching plants needing water:', error);
+      return [];
+    }
   }
 
   async getHealthyPlants(userId: number): Promise<UserPlant[]> {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    return this.userPlants.filter(p => 
-      p.userId === userId && 
-      p.nextWaterDate != null && 
-      p.nextWaterDate > today
-    );
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const result = await client.query(
+        'SELECT * FROM user_plants WHERE user_id = $1 AND next_water_date > $2',
+        [userId, today]
+      );
+      return result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        plantId: row.plant_id,
+        nickname: row.nickname,
+        location: row.location,
+        lastWatered: row.last_watered,
+        wateringFrequency: row.watering_frequency,
+        nextWaterDate: row.next_water_date,
+        imageUrl: row.image_url,
+        notes: row.notes,
+        createdAt: row.created_at
+      }));
+    } catch (error) {
+      console.error('Error fetching healthy plants:', error);
+      return [];
+    }
   }
 
   async getUpcomingWateringPlants(userId: number): Promise<UserPlant[]> {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const nextWeek = format(addDays(new Date(), 7), 'yyyy-MM-dd');
-    return this.userPlants.filter(p => 
-      p.userId === userId && 
-      p.nextWaterDate != null && 
-      p.nextWaterDate > today && 
-      p.nextWaterDate <= nextWeek
-    );
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const nextWeek = format(addDays(new Date(), 7), 'yyyy-MM-dd');
+      const result = await client.query(
+        'SELECT * FROM user_plants WHERE user_id = $1 AND next_water_date > $2 AND next_water_date <= $3',
+        [userId, today, nextWeek]
+      );
+      return result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        plantId: row.plant_id,
+        nickname: row.nickname,
+        location: row.location,
+        lastWatered: row.last_watered,
+        wateringFrequency: row.watering_frequency,
+        nextWaterDate: row.next_water_date,
+        imageUrl: row.image_url,
+        notes: row.notes,
+        createdAt: row.created_at
+      }));
+    } catch (error) {
+      console.error('Error fetching upcoming watering plants:', error);
+      return [];
+    }
   }
 }
 
 // Export an instance of the storage
-export const storage = new InMemoryStorage();
+export const storage = new DatabaseStorage();

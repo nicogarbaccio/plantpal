@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PlantCard from "@/components/plant-card";
 import CategoryCard from "@/components/category-card";
-import { Plant, Category } from "@shared/schema";
+import { Plant, Category } from "../../../shared/schema.js";
 import { useFilterPlants } from "@/hooks/use-filter-plants";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,26 @@ export default function Explore() {
 
   // Fetch plants
   const plantsQuery = useQuery<Plant[]>({
-    queryKey: ["/api/plants"],
+    queryKey: ["plants"],
+    queryFn: async () => {
+      const response = await fetch("/api/plants");
+      if (!response.ok) {
+        throw new Error("Failed to fetch plants");
+      }
+      return response.json();
+    },
   });
 
   // Fetch categories
   const categoriesQuery = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const response = await fetch("/api/categories");
+      if (!response.ok) {
+        throw new Error("Failed to fetch categories");
+      }
+      return response.json();
+    },
     retry: 3,
     retryDelay: 1000,
     staleTime: 1000 * 60 * 5, // 5 minutes
