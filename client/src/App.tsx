@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Header from "@/components/layout/header";
-import Footer from "@/components/layout/footer";
 import Explore from "@/pages/explore";
 import MyCollection from "@/pages/my-collection";
 import PlantDetail from "@/pages/plant-detail";
@@ -35,7 +34,6 @@ function App() {
           <main className="flex-grow">
             <Router />
           </main>
-          <Footer />
         </div>
         <Toaster />
       </TooltipProvider>
