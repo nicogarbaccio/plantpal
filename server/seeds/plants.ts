@@ -19,7 +19,7 @@ const popularPlants = [
     name: "Snake Plant",
     botanicalName: "Sansevieria trifasciata",
     description: "One of the most tolerant houseplants. Excellent air purifier and perfect for beginners.",
-    imageUrl: "https://images.unsplash.com/photo-1658197912858-367ddfa43a0b?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1593482892290-f54927ae1bb6?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     wateringFrequency: 14, // Water every 2 weeks
     lightRequirements: "Low to bright indirect light",
     difficulty: "Easy",
@@ -49,7 +49,7 @@ const popularPlants = [
     name: "Peace Lily",
     botanicalName: "Spathiphyllum",
     description: "Elegant white flowers and glossy leaves. Great air purifier and humidity lover.",
-    imageUrl: "https://images.unsplash.com/photo-1593691509543-c55fb32e7355?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "https://plus.unsplash.com/premium_photo-1676117273363-2b13dbbc5385?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVhY2UlMjBsaWx5fGVufDB8fDB8fHww&auto=format&fit=crop",
     wateringFrequency: 7, // Water weekly
     lightRequirements: "Low to medium indirect light",
     difficulty: "Easy",
@@ -59,7 +59,7 @@ const popularPlants = [
     name: "ZZ Plant",
     botanicalName: "Zamioculcas zamiifolia",
     description: "Virtually indestructible plant with glossy leaves. Perfect for offices and low-light conditions.",
-    imageUrl: "https://images.unsplash.com/photo-1572688484438-313a6e50c333?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1622673037877-18ee56d1f990?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8enolMjBwbGFudHxlbnwwfHwwfHx8MA%3D%3D",
     wateringFrequency: 14, // Water every 2 weeks
     lightRequirements: "Low to bright indirect light",
     difficulty: "Easy",
@@ -69,7 +69,7 @@ const popularPlants = [
     name: "Spider Plant",
     botanicalName: "Chlorophytum comosum",
     description: "Fast-growing plant that produces babies (plantlets) on long stems. Great air purifier.",
-    imageUrl: "https://images.unsplash.com/photo-1572688469351-947230df2467?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1608161779298-f42256d2c58d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c3BpZGVyJTIwcGxhbnR8ZW58MHx8MHx8fDA%3D",
     wateringFrequency: 7, // Water weekly
     lightRequirements: "Moderate to bright indirect light",
     difficulty: "Easy",
