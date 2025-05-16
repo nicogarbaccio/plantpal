@@ -3,13 +3,18 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuthStore } from "@/lib/auth";
 
 export default function Header() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // TODO: Replace with real auth
-  const [isSignedIn] = useState(false);
-  const mockUser = { name: "John Doe" };
+  const { user, token, clearAuth } = useAuthStore();
+  const isSignedIn = !!token;
+
+  // Handle sign out
+  const handleSignOut = () => {
+    clearAuth();
+  };
 
   // Determine if a link is active
   const isActive = (path: string) => {
@@ -73,9 +78,20 @@ export default function Header() {
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center space-x-4">
           {isSignedIn ? (
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>{mockUser.name[0]}</AvatarFallback>
-            </Avatar>
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>
+                  {user?.username[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                variant="ghost"
+                className="text-charcoal hover:text-primary"
+                onClick={handleSignOut}
+              >
+                Sign out
+              </Button>
+            </div>
           ) : (
             <Link href="/signin">
               <Button
@@ -140,13 +156,27 @@ export default function Header() {
                   </Link>
                 )}
                 {isSignedIn ? (
-                  <div className="flex items-center space-x-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>{mockUser.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-charcoal font-poppins">
-                      {mockUser.name}
-                    </span>
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback>
+                          {user?.username[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-charcoal font-poppins">
+                        {user?.username}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      className="text-charcoal hover:text-primary w-full justify-start px-0"
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Sign out
+                    </Button>
                   </div>
                 ) : (
                   <Link href="/signin">

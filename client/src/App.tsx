@@ -12,19 +12,17 @@ import AddPlant from "@/pages/add-plant";
 import SignIn from "@/pages/signin";
 import SignUp from "@/pages/signup";
 import AuthGuard from "@/components/auth-guard";
+import { useAuthStore } from "@/lib/auth";
 import { useState } from "react";
 
 function Router() {
-  // TODO: Replace with real auth state management
-  const [isSignedIn] = useState(false);
-
   return (
     <Switch>
       <Route path="/" component={Explore} />
       <Route path="/explore" component={Explore} />
       <Route path="/my-collection">
         {() => (
-          <AuthGuard isSignedIn={isSignedIn}>
+          <AuthGuard>
             <MyCollection />
           </AuthGuard>
         )}
@@ -32,14 +30,14 @@ function Router() {
       <Route path="/plants/:id" component={PlantDetail} />
       <Route path="/my-collection/add">
         {() => (
-          <AuthGuard isSignedIn={isSignedIn}>
+          <AuthGuard>
             <AddPlant />
           </AuthGuard>
         )}
       </Route>
       <Route path="/my-collection/:id">
         {() => (
-          <AuthGuard isSignedIn={isSignedIn}>
+          <AuthGuard>
             <PlantDetail />
           </AuthGuard>
         )}

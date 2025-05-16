@@ -1,12 +1,123 @@
-import type { Express } from "express";
+import {
+  authenticateToken,
+  createToken,
+  comparePasswords,
+  hashPassword,
+  loginSchema,
+  registerSchema,
+} from "./auth.js";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage.js";
-import { insertPlantSchema, insertUserPlantSchema, insertWateringHistorySchema, type UserPlant } from "../shared/schema.js";
+import { insertPlantSchema, insertUserPlantSchema, insertWateringHistorySchema, insertUserSchema, type UserPlant } from "../shared/schema.js";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
+
+// Rate limiter for auth routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5 // 5 requests per window
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  // Auth routes
+  app.post("/api/auth/register", authLimiter, async (req, res) => {
+    try {
+      const data = registerSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(data.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      // Hash password and create user
+      const hashedPassword = await hashPassword(data.password);
+      const user = await storage.createUser({
+        username: data.username,
+        password: hashedPassword,
+      });
+
+      // Generate token
+      const token = createToken({ userId: user.id, username: user.username });
+      
+      res.status(201).json({
+        user: { id: user.id, username: user.username },
+        token,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Error creating user" });
+    }
+  });
+
+  app.post("/api/auth/login", authLimiter, async (req, res) => {
+    try {
+      const data = loginSchema.parse(req.body);
+      
+      // Find user
+      const user = await storage.getUserByUsername(data.username);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
+      // Verify password
+      const validPassword = await comparePasswords(data.password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
+      // Generate token
+      const token = createToken({ userId: user.id, username: user.username });
+      
+      res.json({
+        user: { id: user.id, username: user.username },
+        token,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Error during login" });
+    }
+  });
+
+  app.get("/api/auth/me", authenticateToken, async (req: Request & { user?: { userId: number; username: string } }, res) => {
+    try {
+      const user = await storage.getUser(req.user!.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ user: { id: user.id, username: user.username } });
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching user" });
+    }
+  });
+
+  // Protected routes - Add authenticateToken middleware
+  app.use("/api/user-plants", authenticateToken);
+  app.use("/api/plants-status", authenticateToken);
+
+  // Update existing routes to use req.user.userId instead of hardcoded user ID
+  app.get("/api/user-plants", async (req: Request & { user?: { userId: number } }, res) => {
+    try {
+      const userPlants = await storage.getAllUserPlants(req.user!.userId);
+      
+      // Enhance user plants with their catalog plant information
+      const enhancedUserPlants = await Promise.all(
+        userPlants.map(async (userPlant) => {
+          const plant = await storage.getPlant(userPlant.plantId);
+          return { ...userPlant, plant };
+        })
+      );
+      
+      res.json(enhancedUserPlants);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching user plants" });
+    }
+  });
 
   // Get all plant categories
   app.get('/api/categories', async (req, res) => {
@@ -72,27 +183,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user's plant collection
-  app.get('/api/user-plants', async (req, res) => {
-    try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
-      const userPlants = await storage.getAllUserPlants(userId);
-      
-      // Enhance user plants with their catalog plant information
-      const enhancedUserPlants = await Promise.all(
-        userPlants.map(async (userPlant: UserPlant) => {
-          const plant = await storage.getPlant(userPlant.plantId);
-          return { ...userPlant, plant };
-        })
-      );
-      
-      res.json(enhancedUserPlants);
-    } catch (error) {
-      res.status(500).json({ message: 'Error fetching user plants' });
-    }
-  });
-
   // Get user plant by ID
   app.get('/api/user-plants/:id', async (req, res) => {
     try {
@@ -116,14 +206,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add plant to user's collection
-  app.post('/api/user-plants', async (req, res) => {
+  app.post('/api/user-plants', async (req: Request & { user?: { userId: number } }, res) => {
     try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
-      
       const userPlantData = {
         ...insertUserPlantSchema.parse(req.body),
-        userId
+        userId: req.user!.userId
       };
       
       const newUserPlant = await storage.createUserPlant(userPlantData);
@@ -258,11 +345,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get plants needing water
-  app.get('/api/plants-status/needs-water', async (req, res) => {
+  app.get('/api/plants-status/needs-water', async (req: Request & { user?: { userId: number } }, res) => {
     try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
-      const plants = await storage.getPlantsNeedingWater(userId);
+      const plants = await storage.getPlantsNeedingWater(req.user!.userId);
       
       // Enhance user plants with their catalog plant information
       const enhancedUserPlants = await Promise.all(
@@ -279,11 +364,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get healthy plants
-  app.get('/api/plants-status/healthy', async (req, res) => {
+  app.get('/api/plants-status/healthy', async (req: Request & { user?: { userId: number } }, res) => {
     try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
-      const plants = await storage.getHealthyPlants(userId);
+      const plants = await storage.getHealthyPlants(req.user!.userId);
       
       // Enhance user plants with their catalog plant information
       const enhancedUserPlants = await Promise.all(
@@ -300,11 +383,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get plants with upcoming watering
-  app.get('/api/plants-status/upcoming', async (req, res) => {
+  app.get('/api/plants-status/upcoming', async (req: Request & { user?: { userId: number } }, res) => {
     try {
-      // For simplicity, we're using user ID 1 (demo user)
-      const userId = 1;
-      const plants = await storage.getUpcomingWateringPlants(userId);
+      const plants = await storage.getUpcomingWateringPlants(req.user!.userId);
       
       // Enhance user plants with their catalog plant information
       const enhancedUserPlants = await Promise.all(

@@ -25,6 +25,12 @@ const mapUserPlantRow = (row: any): UserPlant => ({
 
 // Database interface for plant operations
 interface Storage {
+  // User management
+  createUser(user: InsertUser): Promise<User>;
+  getUser(id: number): Promise<User | null>;
+  getUserByUsername(username: string): Promise<User | null>;
+  waterPlant(id: number, notes: string): Promise<WateringHistory>;
+
   createPlant(insertPlant: InsertPlant): Promise<Plant>;
   getPlant(id: number): Promise<Plant | null>;
   getAllPlants(): Promise<Plant[]>;
@@ -44,6 +50,98 @@ interface Storage {
 }
 
 class DatabaseStorage implements Storage {
+  // User management methods
+  async createUser(insertUser: InsertUser): Promise<User> {
+    try {
+      const result = await client.query(
+        'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *',
+        [insertUser.username, insertUser.password]
+      );
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        username: row.username,
+        password: row.password
+      };
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+
+  async getUser(id: number): Promise<User | null> {
+    try {
+      const result = await client.query('SELECT * FROM users WHERE id = $1', [id]);
+      if (result.rows.length === 0) {
+        return null;
+      }
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        username: row.username,
+        password: row.password
+      };
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return null;
+    }
+  }
+
+  async getUserByUsername(username: string): Promise<User | null> {
+    try {
+      const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
+      if (result.rows.length === 0) {
+        return null;
+      }
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        username: row.username,
+        password: row.password
+      };
+    } catch (error) {
+      console.error('Error fetching user by username:', error);
+      return null;
+    }
+  }
+
+  async waterPlant(id: number, notes: string): Promise<WateringHistory> {
+    try {
+      const today = new Date();
+      const wateringRecord = {
+        userPlantId: id,
+        wateredDate: format(today, 'yyyy-MM-dd'),
+        notes: notes || ''
+      };
+
+      // Insert watering record
+      const wateringResult = await client.query(
+        'INSERT INTO watering_history (user_plant_id, watered_date, notes) VALUES ($1, $2, $3) RETURNING *',
+        [wateringRecord.userPlantId, wateringRecord.wateredDate, wateringRecord.notes]
+      );
+
+      // Update user plant's last watered and next water date
+      const userPlant = await this.getUserPlant(id);
+      if (userPlant) {
+        const nextWaterDate = format(addDays(today, userPlant.wateringFrequency), 'yyyy-MM-dd');
+        await client.query(
+          'UPDATE user_plants SET last_watered = $1, next_water_date = $2 WHERE id = $3',
+          [wateringRecord.wateredDate, nextWaterDate, id]
+        );
+      }
+
+      const row = wateringResult.rows[0];
+      return {
+        id: row.id,
+        userPlantId: row.user_plant_id,
+        wateredDate: row.watered_date,
+        notes: row.notes
+      };
+    } catch (error) {
+      console.error('Error recording watering:', error);
+      throw error;
+    }
+  }
 
   async createPlant(insertPlant: InsertPlant): Promise<Plant> {
     try {

@@ -1,17 +1,44 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/lib/auth";
 
 interface AuthGuardProps {
   children: ReactNode;
-  isSignedIn: boolean;
 }
 
-export default function AuthGuard({ children, isSignedIn }: AuthGuardProps) {
+export default function AuthGuard({ children }: AuthGuardProps) {
   const [, setLocation] = useLocation();
+  const { token, user, setAuth, clearAuth } = useAuthStore();
 
-  if (!isSignedIn) {
+  useEffect(() => {
+    const verifyAuth = async () => {
+      if (!token) return;
+
+      try {
+        const res = await fetch("/api/auth/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Invalid session");
+        }
+
+        const data = await res.json();
+        setAuth(token, data.user);
+      } catch {
+        clearAuth();
+        setLocation("/signin");
+      }
+    };
+
+    verifyAuth();
+  }, [token, setAuth, clearAuth, setLocation]);
+
+  if (!token || !user) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4">
         <Card className="w-full max-w-md">
