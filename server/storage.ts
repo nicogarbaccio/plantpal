@@ -29,6 +29,7 @@ interface Storage {
   createUser(user: InsertUser): Promise<User>;
   getUser(id: number): Promise<User | null>;
   getUserByUsername(username: string): Promise<User | null>;
+  getUserByEmail(email: string): Promise<User | null>;
   waterPlant(id: number, notes: string): Promise<WateringHistory>;
 
   createPlant(insertPlant: InsertPlant): Promise<Plant>;
@@ -54,8 +55,8 @@ class DatabaseStorage implements Storage {
   async createUser(insertUser: InsertUser): Promise<User> {
     try {
       const result = await client.query(
-        'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *',
-        [insertUser.username, insertUser.password]
+        'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *',
+        [insertUser.username, insertUser.email, insertUser.password]
       );
       const row = result.rows[0];
       return {
@@ -79,6 +80,7 @@ class DatabaseStorage implements Storage {
       return {
         id: row.id,
         username: row.username,
+        email: row.email,
         password: row.password
       };
     } catch (error) {
@@ -97,10 +99,30 @@ class DatabaseStorage implements Storage {
       return {
         id: row.id,
         username: row.username,
+        email: row.email,
         password: row.password
       };
     } catch (error) {
       console.error('Error fetching user by username:', error);
+      return null;
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+      if (result.rows.length === 0) {
+        return null;
+      }
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        username: row.username,
+        email: row.email,
+        password: row.password
+      };
+    } catch (error) {
+      console.error('Error fetching user by email:', error);
       return null;
     }
   }

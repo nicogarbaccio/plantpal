@@ -13,11 +13,15 @@ const JWT_EXPIRES_IN = "7d";
 
 // Validation schemas
 export const loginSchema = z.object({
-  username: z.string().min(3),
+  identifier: z.string().min(3),
   password: z.string().min(6),
 });
 
-export const registerSchema = loginSchema;
+export const registerSchema = z.object({
+  username: z.string().min(3),
+  email: z.string().email(),
+  password: z.string().min(6),
+});
 
 // JWT token types
 export interface JwtPayload {

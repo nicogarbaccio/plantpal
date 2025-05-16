@@ -26,15 +26,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = registerSchema.parse(req.body);
       
       // Check if username already exists
-      const existingUser = await storage.getUserByUsername(data.username);
-      if (existingUser) {
+      const existingUsername = await storage.getUserByUsername(data.username);
+      if (existingUsername) {
         return res.status(400).json({ message: "Username already exists" });
+      }
+
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail(data.email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already exists" });
       }
 
       // Hash password and create user
       const hashedPassword = await hashPassword(data.password);
       const user = await storage.createUser({
         username: data.username,
+        email: data.email,
         password: hashedPassword,
       });
 
@@ -57,16 +64,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = loginSchema.parse(req.body);
       
-      // Find user
-      const user = await storage.getUserByUsername(data.username);
+      // Find user by username or email
+      let user = await storage.getUserByUsername(data.identifier);
       if (!user) {
-        return res.status(401).json({ message: "Invalid username or password" });
+        user = await storage.getUserByEmail(data.identifier);
+      }
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email/username or password" });
       }
 
       // Verify password
       const validPassword = await comparePasswords(data.password, user.password);
       if (!validPassword) {
-        return res.status(401).json({ message: "Invalid username or password" });
+        return res.status(401).json({ message: "Invalid email/username or password" });
       }
 
       // Generate token
