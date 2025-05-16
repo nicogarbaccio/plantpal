@@ -57,37 +57,21 @@ export default function Header() {
               Explore Plants
             </a>
           </Link>
-          <Link href="/my-collection">
-            <a
-              className={`${
-                isActive("/my-collection") ? "text-primary" : "text-charcoal"
-              } hover:text-primary transition font-poppins`}
-            >
-              My Collection
-            </a>
-          </Link>
+          {isSignedIn && (
+            <Link href="/my-collection">
+              <a
+                className={`${
+                  isActive("/my-collection") ? "text-primary" : "text-charcoal"
+                } hover:text-primary transition font-poppins`}
+              >
+                My Collection
+              </a>
+            </Link>
+          )}
         </div>
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center space-x-4">
-          <Link href="/my-collection/add">
-            <Button className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-[12px] font-poppins">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Add Plant
-            </Button>
-          </Link>
           {isSignedIn ? (
             <Avatar className="h-8 w-8">
               <AvatarFallback>{mockUser.name[0]}</AvatarFallback>
@@ -141,18 +125,20 @@ export default function Header() {
                     Explore Plants
                   </a>
                 </Link>
-                <Link href="/my-collection">
-                  <a
-                    className={`${
-                      isActive("/my-collection")
-                        ? "text-primary"
-                        : "text-charcoal"
-                    } hover:text-primary transition font-poppins text-lg`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    My Collection
-                  </a>
-                </Link>
+                {isSignedIn && (
+                  <Link href="/my-collection">
+                    <a
+                      className={`${
+                        isActive("/my-collection")
+                          ? "text-primary"
+                          : "text-charcoal"
+                      } hover:text-primary transition font-poppins text-lg`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Collection
+                    </a>
+                  </Link>
+                )}
                 {isSignedIn ? (
                   <div className="flex items-center space-x-2">
                     <Avatar className="h-8 w-8">
@@ -173,27 +159,6 @@ export default function Header() {
                     </Button>
                   </Link>
                 )}
-                <Link href="/my-collection/add">
-                  <Button
-                    className="bg-primary hover:bg-primary/90 text-white w-full mt-4 rounded-[12px] font-poppins"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    Add Plant
-                  </Button>
-                </Link>
               </div>
             </SheetContent>
           </Sheet>

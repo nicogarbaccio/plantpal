@@ -11,19 +11,41 @@ import PlantDetail from "@/pages/plant-detail";
 import AddPlant from "@/pages/add-plant";
 import SignIn from "@/pages/signin";
 import SignUp from "@/pages/signup";
+import AuthGuard from "@/components/auth-guard";
+import { useState } from "react";
 
 function Router() {
+  // TODO: Replace with real auth state management
+  const [isSignedIn] = useState(false);
+
   return (
     <Switch>
       <Route path="/" component={Explore} />
       <Route path="/explore" component={Explore} />
-      <Route path="/my-collection" component={MyCollection} />
+      <Route path="/my-collection">
+        {() => (
+          <AuthGuard isSignedIn={isSignedIn}>
+            <MyCollection />
+          </AuthGuard>
+        )}
+      </Route>
       <Route path="/plants/:id" component={PlantDetail} />
-      <Route path="/my-collection/add" component={AddPlant} />
-      <Route path="/my-collection/:id" component={PlantDetail} />
+      <Route path="/my-collection/add">
+        {() => (
+          <AuthGuard isSignedIn={isSignedIn}>
+            <AddPlant />
+          </AuthGuard>
+        )}
+      </Route>
+      <Route path="/my-collection/:id">
+        {() => (
+          <AuthGuard isSignedIn={isSignedIn}>
+            <PlantDetail />
+          </AuthGuard>
+        )}
+      </Route>
       <Route path="/signin" component={SignIn} />
       <Route path="/signup" component={SignUp} />
-      {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
   );
