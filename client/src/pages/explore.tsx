@@ -5,7 +5,6 @@ import CategoryCard from "@/components/category-card";
 import { Plant, Category } from "../../../shared/schema.js";
 import { useFilterPlants } from "@/hooks/use-filter-plants";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -95,47 +94,8 @@ export default function Explore() {
                   </span>
                 </div>
               </div>
-              <div>
-                <Button className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white p-6 h-[58px] rounded-[12px] shadow-lg font-poppins flex items-center justify-center">
-                  Find Plants
-                </Button>
-              </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Featured Categories */}
-      <div className="container mx-auto px-4 py-12">
-        <h3 className="text-2xl font-poppins font-semibold mb-8">
-          Popular Categories
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {categoriesQuery.isLoading ? (
-            // Loading skeletons for categories
-            Array(4)
-              .fill(0)
-              .map((_, index) => (
-                <div
-                  key={`category-skeleton-${index}`}
-                  className="rounded-[12px] overflow-hidden relative h-40"
-                >
-                  <Skeleton className="w-full h-full" />
-                </div>
-              ))
-          ) : categoriesQuery.error ? (
-            <div className="col-span-4 text-center text-red-500">
-              Error loading categories
-            </div>
-          ) : (
-            categoriesQuery.data?.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                onClick={() => setCategory(category.name)}
-              />
-            ))
-          )}
         </div>
       </div>
 
@@ -201,12 +161,8 @@ export default function Explore() {
                   </div>
                 ))
             ) : plantsQuery.error ? (
-              <div className="col-span-4 text-center text-red-500">
+              <div className="col-span-full text-center text-red-500">
                 Error loading plants
-              </div>
-            ) : filteredPlants.length === 0 ? (
-              <div className="col-span-4 text-center text-gray-500 py-8">
-                No plants found matching your criteria
               </div>
             ) : (
               filteredPlants.map((plant) => (
@@ -214,24 +170,42 @@ export default function Explore() {
               ))
             )}
           </div>
+        </div>
+      </div>
 
-          {filteredPlants.length > 0 && (
-            <div className="mt-8 text-center">
-              <Button className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-[12px] font-poppins inline-flex items-center">
-                <span>Load More</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 ml-2"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </Button>
-            </div>
-          )}
+      {/* Popular Categories */}
+      <div className="bg-accent py-12">
+        <div className="container mx-auto px-4">
+          <h3 className="text-2xl font-poppins font-semibold mb-8">
+            Popular Categories
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {categoriesQuery.isLoading ? (
+              // Loading skeletons for categories
+              Array(4)
+                .fill(0)
+                .map((_, index) => (
+                  <div
+                    key={`category-skeleton-${index}`}
+                    className="rounded-[12px] overflow-hidden relative h-40"
+                  >
+                    <Skeleton className="w-full h-full" />
+                  </div>
+                ))
+            ) : categoriesQuery.error ? (
+              <div className="col-span-4 text-center text-red-500">
+                Error loading categories
+              </div>
+            ) : (
+              categoriesQuery.data?.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  onClick={() => setCategory(category.name)}
+                />
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
