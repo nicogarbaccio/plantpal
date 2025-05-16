@@ -42,7 +42,7 @@ const plantCategories = [
   {
     name: "Air Purifying",
     description: "NASA-studied plants that help clean indoor air by removing common household toxins.",
-    imageUrl: "https://images.unsplash.com/photo-1524492449090-a4f84c3fde5c?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1530049478161-0780526964f4?q=80&w=1000&auto=format&fit=crop",
     plantCount: 1, // Spider Plant
   },
 ];

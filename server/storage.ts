@@ -27,12 +27,13 @@ interface Storage {
   getUpcomingWateringPlants(userId: number): Promise<UserPlant[]>;
 }
 
+import { client, db } from './database.js';
+
 class InMemoryStorage implements Storage {
   private plants: Plant[] = [];
   private users: User[] = [];
   private userPlants: UserPlant[] = [];
   private wateringHistory: WateringHistory[] = [];
-  private categories: Category[] = [];
   private nextId = 1;
 
   async createPlant(insertPlant: InsertPlant): Promise<Plant> {
@@ -65,16 +66,46 @@ class InMemoryStorage implements Storage {
   }
 
   async getCategory(name: string): Promise<Category | null> {
-    return this.categories.find(c => c.name === name) ?? null;
+    try {
+      const result = await client.query('SELECT * FROM categories WHERE name = $1', [name]);
+      if (result.rows.length === 0) {
+        return null;
+      }
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        imageUrl: row.image_url,
+        plantCount: row.plant_count
+      };
+    } catch (error) {
+      console.error('Error fetching category:', error);
+      return null;
+    }
   }
 
   async updateCategory(category: Category): Promise<Category> {
-    const index = this.categories.findIndex(c => c.id === category.id);
-    if (index === -1) {
-      throw new Error("Category not found");
+    try {
+      const result = await client.query(
+        'UPDATE categories SET name = $1, description = $2, image_url = $3, plant_count = $4 WHERE id = $5 RETURNING *',
+        [category.name, category.description, category.imageUrl, category.plantCount, category.id]
+      );
+      if (result.rows.length === 0) {
+        throw new Error("Category not found");
+      }
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        imageUrl: row.image_url,
+        plantCount: row.plant_count
+      };
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
     }
-    this.categories[index] = category;
-    return category;
   }
 
   async createUserPlant(insertUserPlant: InsertUserPlant): Promise<UserPlant> {
@@ -143,19 +174,44 @@ class InMemoryStorage implements Storage {
   }
 
   async createCategory(insertCategory: InsertCategory): Promise<Category> {
-    const id = this.nextId++;
-    const category: Category = {
-      ...insertCategory,
-      id,
-      imageUrl: insertCategory.imageUrl ?? null,
-      plantCount: insertCategory.plantCount ?? null
-    };
-    this.categories.push(category);
-    return category;
+    try {
+      const result = await client.query(
+        'INSERT INTO categories (name, description, image_url, plant_count) VALUES ($1, $2, $3, $4) RETURNING *',
+        [
+          insertCategory.name,
+          insertCategory.description,
+          insertCategory.imageUrl ?? null,
+          insertCategory.plantCount ?? 0
+        ]
+      );
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        imageUrl: row.image_url,
+        plantCount: row.plant_count
+      };
+    } catch (error) {
+      console.error('Error creating category:', error);
+      throw error;
+    }
   }
 
   async getAllCategories(): Promise<Category[]> {
-    return this.categories;
+    try {
+      const result = await client.query('SELECT * FROM categories');
+      return result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        imageUrl: row.image_url,
+        plantCount: row.plant_count
+      }));
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
   }
 
   async getPlantsByCategory(category: string): Promise<Plant[]> {
