@@ -9,6 +9,7 @@ import Explore from "@/pages/explore";
 import MyCollection from "@/pages/my-collection";
 import PlantDetail from "@/pages/plant-detail";
 import AddPlant from "@/pages/add-plant";
+import EditPlant from "@/pages/edit-plant";
 import SignIn from "@/pages/signin";
 import SignUp from "@/pages/signup";
 import AuthGuard from "@/components/auth-guard";
@@ -32,6 +33,13 @@ function Router() {
         {() => (
           <AuthGuard>
             <AddPlant />
+          </AuthGuard>
+        )}
+      </Route>
+      <Route path="/my-collection/edit/:id">
+        {() => (
+          <AuthGuard>
+            <EditPlant />
           </AuthGuard>
         )}
       </Route>

@@ -38,6 +38,8 @@ const formSchema = z.object({
   wateringFrequency: z.number().min(1, "Watering frequency is required"),
   notes: z.string().optional(),
   imageUrl: z.string().optional(),
+  lastWatered: z.string(), // ISO date string
+  nextWaterDate: z.string(), // ISO date string
 });
 
 export default function AddPlant() {
@@ -53,6 +55,12 @@ export default function AddPlant() {
     queryKey: ["/api/plants"],
   });
 
+  // Get current date in YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0];
+  const nextWeek = new Date();
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  const nextWeekFormatted = nextWeek.toISOString().split("T")[0];
+
   // Set up form with preselected plant if available
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -63,6 +71,8 @@ export default function AddPlant() {
       wateringFrequency: 7, // Default to weekly watering
       notes: "",
       imageUrl: "",
+      lastWatered: today,
+      nextWaterDate: nextWeekFormatted,
     },
   });
 
@@ -117,36 +127,13 @@ export default function AddPlant() {
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    // Format dates properly
-    const now = new Date();
-    const nextWaterDate = new Date();
-    nextWaterDate.setDate(now.getDate() + data.wateringFrequency);
-
     const formData: AddPlantFormData = {
       ...data,
-      // Format dates as YYYY-MM-DD strings for the server
-      lastWatered: now.toISOString().split("T")[0],
-      nextWaterDate: nextWaterDate.toISOString().split("T")[0],
       wateringFrequency: Math.max(1, data.wateringFrequency), // Ensure positive watering frequency
       // Clean up optional fields
       notes: data.notes?.trim() || undefined,
       imageUrl: data.imageUrl?.trim() || undefined,
     };
-
-    // Validate required fields
-    if (
-      !formData.plantId ||
-      !formData.nickname ||
-      !formData.location ||
-      !formData.wateringFrequency
-    ) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
 
     addPlantMutation.mutate(formData);
   };

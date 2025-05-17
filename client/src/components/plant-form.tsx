@@ -29,32 +29,10 @@ const formSchema = z.object({
   nickname: z.string().min(1, "Nickname is required"),
   location: z.string().min(1, "Location is required"),
   wateringFrequency: z.number().min(1, "Watering frequency is required"),
-  notes: z
-    .string()
-    .optional()
-    .transform((val) => val || undefined),
-  imageUrl: z
-    .string()
-    .optional()
-    .transform((val) => val || undefined),
-  // Add date fields with validation
-  lastWatered: z
-    .string()
-    .optional()
-    .transform((val) => {
-      if (!val) return format(new Date(), "yyyy-MM-dd");
-      return val;
-    }),
-  nextWaterDate: z
-    .string()
-    .optional()
-    .transform((val, ctx) => {
-      if (!val && ctx.data.wateringFrequency) {
-        const date = new Date();
-        return format(addDays(date, ctx.data.wateringFrequency), "yyyy-MM-dd");
-      }
-      return val;
-    }),
+  notes: z.string().optional(),
+  imageUrl: z.string().optional(),
+  lastWatered: z.string(),
+  nextWaterDate: z.string(),
 });
 
 interface PlantFormProps {
