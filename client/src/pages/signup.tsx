@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/lib/auth";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function SignUp() {
   const [username, setUsername] = useState("");
@@ -44,6 +45,10 @@ export default function SignUp() {
       }
 
       setAuth(data.token, data.user);
+      toast({
+        title: "Welcome to PlantPal!",
+        description: "Your account has been created successfully.",
+      });
       setLocation("/my-collection");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error creating account");

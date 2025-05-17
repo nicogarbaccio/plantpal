@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuthStore } from "@/lib/auth";
+import { toast } from "@/hooks/use-toast";
 
 export default function Header() {
   const [location] = useLocation();
@@ -14,6 +15,10 @@ export default function Header() {
   // Handle sign out
   const handleSignOut = () => {
     clearAuth();
+    toast({
+      title: "Signed out",
+      description: "You have been signed out successfully.",
+    });
   };
 
   // Determine if a link is active

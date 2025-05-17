@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/lib/auth";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function SignIn() {
   const [identifier, setIdentifier] = useState("");
@@ -35,6 +36,10 @@ export default function SignIn() {
       }
 
       setAuth(data.token, data.user);
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
       setLocation("/my-collection");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error signing in");
