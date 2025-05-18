@@ -40,6 +40,7 @@ interface PlantFormProps {
   plants?: Plant[] | null;
   isLoading: boolean;
   onSubmit: (data: z.infer<typeof formSchema>) => void;
+  onCancel?: () => void;
   submitText: string;
   isEdit?: boolean;
 }
@@ -49,6 +50,7 @@ export default function PlantForm({
   plants,
   isLoading,
   onSubmit,
+  onCancel,
   submitText,
   isEdit = false,
 }: PlantFormProps) {
@@ -231,7 +233,18 @@ export default function PlantForm({
           )}
         />
 
-        <div className="flex justify-end">
+        <div className="flex justify-end space-x-4">
+          {isEdit && onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="px-6 rounded-[12px]"
+              disabled={isLoading}
+            >
+              Discard Changes
+            </Button>
+          )}
           <Button
             type="submit"
             className="bg-primary hover:bg-primary/90 text-white px-6 rounded-[12px]"

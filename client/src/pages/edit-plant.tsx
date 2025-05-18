@@ -113,6 +113,10 @@ export default function EditPlant() {
     updatePlantMutation.mutate(data);
   };
 
+  const handleCancel = () => {
+    navigate("/my-collection");
+  };
+
   if (!userPlant && !isLoading) {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
@@ -142,6 +146,7 @@ export default function EditPlant() {
               form={form}
               isLoading={isLoading || updatePlantMutation.isPending}
               onSubmit={onSubmit}
+              onCancel={handleCancel}
               submitText="Save Changes"
               isEdit={true}
             />
