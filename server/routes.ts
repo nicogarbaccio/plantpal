@@ -400,6 +400,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update watering history record
+  app.patch('/api/watering-history/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid ID format' });
+      }
+      
+      const { wateredDate, notes } = req.body;
+      const wateringRecord = await storage.updateWateringHistory(id, wateredDate, notes);
+      
+      res.json(wateringRecord);
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating watering record' });
+    }
+  });
+
+  // Delete watering history record
+  app.delete('/api/watering-history/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid ID format' });
+      }
+      
+      const deleted = await storage.deleteWateringHistory(id);
+      if (deleted) {
+        res.status(204).end();
+      } else {
+        res.status(500).json({ message: 'Error deleting watering record' });
+      }
+    } catch (error) {
+      res.status(500).json({ message: 'Error deleting watering record' });
+    }
+  });
+
   // Get plants needing water
   app.get('/api/plants-status/needs-water', async (req: Request & { user?: { userId: number } }, res) => {
     try {

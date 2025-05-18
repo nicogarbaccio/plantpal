@@ -45,6 +45,8 @@ interface Storage {
   getAllUserPlants(userId: number): Promise<UserPlant[]>;
   deleteUserPlant(id: number): Promise<boolean>;
   getWateringHistory(userPlantId: number): Promise<WateringHistory[]>;
+  updateWateringHistory(id: number, wateredDate: string | null, notes: string | null): Promise<WateringHistory>;
+  deleteWateringHistory(id: number): Promise<boolean>;
   getPlantsNeedingWater(userId: number): Promise<UserPlant[]>;
   getHealthyPlants(userId: number): Promise<UserPlant[]>;
   getUpcomingWateringPlants(userId: number): Promise<UserPlant[]>;
@@ -62,6 +64,7 @@ class DatabaseStorage implements Storage {
       return {
         id: row.id,
         username: row.username,
+        email: row.email,
         password: row.password
       };
     } catch (error) {
@@ -562,6 +565,40 @@ class DatabaseStorage implements Storage {
     } catch (error) {
       console.error('Error fetching upcoming watering plants:', error);
       return [];
+    }
+  }
+
+  async updateWateringHistory(id: number, wateredDate: string | null, notes: string | null): Promise<WateringHistory> {
+    try {
+      const result = await client.query(
+        'UPDATE watering_history SET watered_date = COALESCE($1, watered_date), notes = COALESCE($2, notes) WHERE id = $3 RETURNING *',
+        [wateredDate, notes, id]
+      );
+      
+      if (result.rows.length === 0) {
+        throw new Error("Watering record not found");
+      }
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        userPlantId: row.user_plant_id,
+        wateredDate: row.watered_date,
+        notes: row.notes
+      };
+    } catch (error) {
+      console.error('Error updating watering record:', error);
+      throw error;
+    }
+  }
+
+  async deleteWateringHistory(id: number): Promise<boolean> {
+    try {
+      const result = await client.query('DELETE FROM watering_history WHERE id = $1', [id]);
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting watering record:', error);
+      return false;
     }
   }
 }
