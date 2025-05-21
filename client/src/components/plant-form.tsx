@@ -231,6 +231,23 @@ export default function PlantForm({
 
         <FormField
           control={form.control}
+          name="lastWatered"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Last Watered Date</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormDescription>
+                When was this plant last watered?
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="imageUrl"
           render={({ field }) => (
             <FormItem>
@@ -268,7 +285,7 @@ export default function PlantForm({
         />
 
         <div className="flex justify-end space-x-4">
-          {isEdit && onCancel && (
+          {onCancel && (
             <Button
               type="button"
               variant="outline"
@@ -276,7 +293,7 @@ export default function PlantForm({
               className="px-6 rounded-[12px]"
               disabled={isLoading}
             >
-              Discard Changes
+              {isEdit ? "Discard Changes" : "Discard"}
             </Button>
           )}
           <Button

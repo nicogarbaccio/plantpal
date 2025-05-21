@@ -1,10 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { EnhancedUserPlant } from "@/types";
@@ -25,7 +36,36 @@ const formSchema = z.object({
 export default function EditPlant() {
   const params = useParams();
   const [, navigate] = useLocation();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const id = params.id ? parseInt(params.id) : 0;
+
+  // Delete plant mutation
+  const deletePlantMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("DELETE", `/api/user-plants/${id}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete plant");
+      }
+      return true; // Success with no content
+    },
+    onSuccess: () => {
+      toast({
+        title: "Plant deleted",
+        description: "Your plant has been removed from your collection.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user-plants"] });
+      navigate("/my-collection");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description:
+          error.message || "Failed to delete plant. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Fetch user plant data
   const { data: userPlant, isLoading } = useQuery<EnhancedUserPlant>({
@@ -150,6 +190,47 @@ export default function EditPlant() {
               submitText="Save Changes"
               isEdit={true}
             />
+
+            <div className="mt-8 pt-6 border-t">
+              <h3 className="text-lg font-medium text-red-600 mb-2">
+                Danger Zone
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Once you delete a plant, there is no going back. Please be
+                certain.
+              </p>
+              <Button
+                variant="destructive"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={deletePlantMutation.isPending}
+              >
+                Delete Plant
+              </Button>
+            </div>
+
+            <AlertDialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete {userPlant?.nickname} from your
+                    collection. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                    onClick={() => deletePlantMutation.mutate()}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </div>

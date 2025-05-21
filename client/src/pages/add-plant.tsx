@@ -46,6 +46,8 @@ export default function AddPlant() {
   const [, navigate] = useLocation();
   const search = useSearch();
   const searchParams = new URLSearchParams(search);
+  const returnTo =
+    searchParams.get("returnTo") || document.referrer || "/my-collection";
   const preselectedPlantId = searchParams.get("plantId")
     ? parseInt(searchParams.get("plantId")!)
     : undefined;
@@ -127,12 +129,19 @@ export default function AddPlant() {
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
+    // Calculate next water date based on last watered date and frequency
+    const lastWatered = new Date(data.lastWatered);
+    const nextWaterDate = new Date(lastWatered);
+    nextWaterDate.setDate(lastWatered.getDate() + data.wateringFrequency);
+
     const formData: AddPlantFormData = {
       ...data,
       wateringFrequency: Math.max(1, data.wateringFrequency), // Ensure positive watering frequency
       // Clean up optional fields
       notes: data.notes?.trim() || undefined,
       imageUrl: data.imageUrl?.trim() || undefined,
+      lastWatered: data.lastWatered,
+      nextWaterDate: nextWaterDate.toISOString().split("T")[0],
     };
 
     addPlantMutation.mutate(formData);
@@ -153,6 +162,7 @@ export default function AddPlant() {
               plants={plants}
               isLoading={plantsLoading || addPlantMutation.isPending}
               onSubmit={onSubmit}
+              onCancel={() => navigate(returnTo)}
               submitText="Add to Collection"
             />
           </CardContent>
