@@ -114,6 +114,11 @@ export default function Header() {
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <Link href="/account">
+                  <DropdownMenuItem className="cursor-pointer">
+                    Account
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem
                   onClick={initiateSignOut}
                   className="cursor-pointer"
@@ -197,6 +202,15 @@ export default function Header() {
                         {user?.username}
                       </span>
                     </div>
+                    <Link href="/account">
+                      <Button
+                        variant="ghost"
+                        className="text-charcoal hover:text-primary w-full justify-start px-0"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Account
+                      </Button>
+                    </Link>
                     <Button
                       variant="ghost"
                       className="text-charcoal hover:text-primary w-full justify-start px-0"

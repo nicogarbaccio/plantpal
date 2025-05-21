@@ -12,6 +12,7 @@ import AddPlant from "@/pages/add-plant";
 import EditPlant from "@/pages/edit-plant";
 import SignIn from "@/pages/signin";
 import SignUp from "@/pages/signup";
+import Account from "@/pages/account";
 import AuthGuard from "@/components/auth-guard";
 import { useAuthStore } from "@/lib/auth";
 import { useState } from "react";
@@ -33,6 +34,13 @@ function Router() {
         {() => (
           <AuthGuard>
             <AddPlant />
+          </AuthGuard>
+        )}
+      </Route>
+      <Route path="/account">
+        {() => (
+          <AuthGuard>
+            <Account />
           </AuthGuard>
         )}
       </Route>

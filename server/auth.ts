@@ -27,6 +27,7 @@ export const registerSchema = z.object({
 export interface JwtPayload {
   userId: number;
   username: string;
+  email: string;
 }
 
 // Create JWT token

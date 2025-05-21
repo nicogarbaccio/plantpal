@@ -46,10 +46,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Generate token
-      const token = createToken({ userId: user.id, username: user.username });
+      const token = createToken({ userId: user.id, username: user.username, email: user.email });
       
       res.status(201).json({
-        user: { id: user.id, username: user.username },
+        user: { id: user.id, username: user.username, email: user.email },
         token,
       });
     } catch (error) {
@@ -80,10 +80,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate token
-      const token = createToken({ userId: user.id, username: user.username });
+      const token = createToken({ userId: user.id, username: user.username, email: user.email });
       
       res.json({
-        user: { id: user.id, username: user.username },
+        user: { id: user.id, username: user.username, email: user.email },
         token,
       });
     } catch (error) {
@@ -94,13 +94,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/me", authenticateToken, async (req: Request & { user?: { userId: number; username: string } }, res) => {
+  app.get("/api/auth/me", authenticateToken, async (req: Request & { user?: { userId: number; username: string; email: string } }, res) => {
     try {
       const user = await storage.getUser(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json({ user: { id: user.id, username: user.username } });
+      res.json({ user: { id: user.id, username: user.username, email: user.email } });
     } catch (error) {
       res.status(500).json({ message: "Error fetching user" });
     }

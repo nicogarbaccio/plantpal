@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 interface User {
   id: number;
   username: string;
+  email: string;
 }
 
 interface AuthState {
