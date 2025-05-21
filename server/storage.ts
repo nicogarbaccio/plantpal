@@ -5,7 +5,7 @@ import {
   wateringHistory, WateringHistory, InsertWateringHistory,
   categories, Category, InsertCategory
 } from "../shared/schema.js";
-import { addDays, format } from "date-fns";
+import { addDays, format, subDays } from "date-fns";
 import { client } from './database.js';
 
 // Helper function to map user plant database row to UserPlant object
@@ -600,8 +600,70 @@ class DatabaseStorage implements Storage {
 
   async deleteWateringHistory(id: number): Promise<boolean> {
     try {
-      const result = await client.query('DELETE FROM watering_history WHERE id = $1', [id]);
-      return result.rowCount !== null && result.rowCount > 0;
+      // First get the watering record to find the user_plant_id
+      const wateringRecord = await client.query(
+        'SELECT user_plant_id FROM watering_history WHERE id = $1',
+        [id]
+      );
+
+      if (wateringRecord.rows.length === 0) {
+        return false;
+      }
+
+      const userPlantId = wateringRecord.rows[0].user_plant_id;
+
+      // Delete the watering record
+      const deleteResult = await client.query(
+        'DELETE FROM watering_history WHERE id = $1',
+        [id]
+      );
+
+      if (deleteResult.rowCount === 0) {
+        return false;
+      }
+
+      // Check if this was the last watering record
+      const remainingRecords = await client.query(
+        'SELECT * FROM watering_history WHERE user_plant_id = $1 ORDER BY watered_date DESC LIMIT 1',
+        [userPlantId]
+      );
+
+      // If no remaining records, update the plant's watering status
+      if (remainingRecords.rows.length === 0) {
+        // Get the plant's watering frequency
+        const plantResult = await client.query(
+          'SELECT watering_frequency FROM user_plants WHERE id = $1',
+          [userPlantId]
+        );
+
+        if (plantResult.rows.length > 0) {
+          const { watering_frequency } = plantResult.rows[0];
+          const yesterday = format(subDays(new Date(), watering_frequency + 1), 'yyyy-MM-dd');
+          const nextWaterDate = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+
+          // Update the plant to be overdue
+          await client.query(
+            'UPDATE user_plants SET last_watered = $1, next_water_date = $2 WHERE id = $3',
+            [yesterday, nextWaterDate, userPlantId]
+          );
+        }
+      } else {
+        // Update the plant with the most recent watering record
+        const lastWatered = remainingRecords.rows[0].watered_date;
+        const wateringFrequency = (await client.query(
+          'SELECT watering_frequency FROM user_plants WHERE id = $1',
+          [userPlantId]
+        )).rows[0].watering_frequency;
+
+        const nextWaterDate = format(addDays(new Date(lastWatered), wateringFrequency), 'yyyy-MM-dd');
+
+        await client.query(
+          'UPDATE user_plants SET last_watered = $1, next_water_date = $2 WHERE id = $3',
+          [lastWatered, nextWaterDate, userPlantId]
+        );
+      }
+
+      return true;
     } catch (error) {
       console.error('Error deleting watering record:', error);
       return false;
