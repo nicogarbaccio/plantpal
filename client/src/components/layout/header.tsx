@@ -3,18 +3,40 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuthStore } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast";
 
 export default function Header() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
   const { user, token, clearAuth } = useAuthStore();
   const isSignedIn = !!token;
 
-  // Handle sign out
-  const handleSignOut = () => {
+  // Handle sign out flow
+  const initiateSignOut = () => {
+    setShowSignOutDialog(true);
+  };
+
+  const confirmSignOut = () => {
     clearAuth();
+    setShowSignOutDialog(false);
     toast({
       title: "Signed out",
       description: "You have been signed out successfully.",
@@ -83,20 +105,23 @@ export default function Header() {
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center space-x-4">
           {isSignedIn ? (
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>
-                  {user?.username[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <Button
-                variant="ghost"
-                className="text-charcoal hover:text-primary"
-                onClick={handleSignOut}
-              >
-                Sign out
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity">
+                  <AvatarFallback>
+                    {user?.username[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={initiateSignOut}
+                  className="cursor-pointer"
+                >
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link href="/signin">
               <Button
@@ -176,7 +201,7 @@ export default function Header() {
                       variant="ghost"
                       className="text-charcoal hover:text-primary w-full justify-start px-0"
                       onClick={() => {
-                        handleSignOut();
+                        initiateSignOut();
                         setIsMenuOpen(false);
                       }}
                     >
@@ -199,6 +224,26 @@ export default function Header() {
           </Sheet>
         </div>
       </div>
+
+      {/* Sign Out Confirmation Dialog */}
+      <AlertDialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure you want to sign out?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You will need to sign in again to access your plant collection.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSignOut}>
+              Yes, sign out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 }
