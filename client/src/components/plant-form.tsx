@@ -14,6 +14,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -85,30 +98,52 @@ export default function PlantForm({
                   <Skeleton className="h-10 w-full" />
                 ) : (
                   <>
-                    <Select
-                      disabled={isLoading}
-                      onValueChange={(value) =>
-                        field.onChange(parseInt(value, 10))
-                      }
-                      value={field.value?.toString() || ""}
-                      defaultValue={field.value?.toString() || ""}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-white">
-                          <SelectValue placeholder="Select a plant from our catalog" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {plants?.map((plant) => (
-                          <SelectItem
-                            key={plant.id}
-                            value={plant.id.toString()}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={`w-full justify-between ${
+                              !field.value && "text-muted-foreground"
+                            }`}
                           >
-                            {plant.name} ({plant.botanicalName})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                            {field.value
+                              ? plants?.find(
+                                  (plant) => plant.id === field.value
+                                )?.name
+                              : "Select a plant from our catalog"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search for a plant..." />
+                          <CommandEmpty>No plant found.</CommandEmpty>
+                          <CommandGroup className="max-h-[300px] overflow-y-auto">
+                            {plants?.map((plant) => (
+                              <CommandItem
+                                key={plant.id}
+                                value={plant.name}
+                                onSelect={() => {
+                                  field.onChange(plant.id);
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    plant.id === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  }`}
+                                />
+                                {plant.name} ({plant.botanicalName})
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormDescription>
                       Select the type of plant from our catalog
                     </FormDescription>
