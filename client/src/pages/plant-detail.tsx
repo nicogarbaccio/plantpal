@@ -529,51 +529,70 @@ export default function PlantDetail() {
                     </p>
                   ) : (
                     <div className="space-y-1">
-                      {wateringHistory.map((record, index) => (
-                        <div key={record.id} className="py-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="font-medium">
-                                {format(
-                                  new Date(record.wateredDate),
-                                  "MMM d, yyyy"
+                      {[...wateringHistory]
+                        .sort((a, b) => {
+                          // First compare by watered date
+                          const dateComparison =
+                            new Date(b.wateredDate).getTime() -
+                            new Date(a.wateredDate).getTime();
+                          if (dateComparison !== 0) return dateComparison;
+
+                          // If watered dates are the same, compare by created time
+                          const aCreated = a.createdAt
+                            ? new Date(a.createdAt).getTime()
+                            : 0;
+                          const bCreated = b.createdAt
+                            ? new Date(b.createdAt).getTime()
+                            : 0;
+                          return bCreated - aCreated;
+                        })
+                        .map((record, index) => (
+                          <div key={record.id} className="py-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <span className="font-medium">
+                                  {format(
+                                    new Date(record.wateredDate),
+                                    "MMM d, yyyy"
+                                  )}
+                                </span>
+                                <span className="text-gray-500 text-sm ml-2">
+                                  {formatDistanceToNow(
+                                    new Date(record.wateredDate)
+                                  )}{" "}
+                                  ago
+                                </span>
+                                {record.notes && (
+                                  <p className="text-gray-600 text-sm mt-1">
+                                    {record.notes}
+                                  </p>
                                 )}
-                              </span>
-                              <span className="text-gray-500 text-sm ml-2">
-                                {formatDistanceToNow(
-                                  new Date(record.wateredDate)
-                                )}{" "}
-                                ago
-                              </span>
-                              {record.notes && (
-                                <p className="text-gray-600 text-sm mt-1">
-                                  {record.notes}
-                                </p>
-                              )}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditWatering(record)}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="text-white"
+                                  onClick={() =>
+                                    handleDeleteInitiate(record.id)
+                                  }
+                                >
+                                  Delete
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEditWatering(record)}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                className="text-white"
-                                onClick={() => handleDeleteInitiate(record.id)}
-                              >
-                                Delete
-                              </Button>
-                            </div>
+                            {index < wateringHistory.length - 1 && (
+                              <Separator className="mt-3" />
+                            )}
                           </div>
-                          {index < wateringHistory.length - 1 && (
-                            <Separator className="mt-3" />
-                          )}
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   )}
                 </CardContent>

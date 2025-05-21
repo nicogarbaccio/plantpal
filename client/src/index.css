@@ -15,21 +15,21 @@
   --card-foreground: 20 14.3% 4.1%;
   --border: 20 5.9% 90%;
   --input: 20 5.9% 90%;
-  --primary: 142 68% 49%;
-  --primary-foreground: 355 100% 100%;
+  --primary: 134 28% 34%;
+  --primary-foreground: 0 0% 100%;
   --secondary: 149 25% 60%;
   --secondary-foreground: 24 9.8% 10%;
   --accent: 146 20% 96%;
   --accent-foreground: 24 9.8% 10%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 142 68% 49%;
+  --ring: 134 28% 34%;
   --radius: 0.75rem;
   
   /* Custom colors for plant app */
   --leaf-green: 142 68% 49%;
   --sage: 149 25% 60%;
-  --off-white: 146 20% 96%;
+  --off-white: 43 57% 89%;
   --sunset-orange: 29 100% 63%;
   --charcoal: 206 4% 20%;
   

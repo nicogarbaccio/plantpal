@@ -68,6 +68,7 @@ export const wateringHistory = pgTable("watering_history", {
   userPlantId: integer("user_plant_id").notNull(),
   wateredDate: date("watered_date").notNull(),
   notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertWateringHistorySchema = createInsertSchema(wateringHistory).omit({

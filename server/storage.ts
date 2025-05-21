@@ -160,7 +160,8 @@ class DatabaseStorage implements Storage {
         id: row.id,
         userPlantId: row.user_plant_id,
         wateredDate: row.watered_date,
-        notes: row.notes
+        notes: row.notes,
+        createdAt: row.created_at
       };
     } catch (error) {
       console.error('Error recording watering:', error);
@@ -476,12 +477,16 @@ class DatabaseStorage implements Storage {
 
   async getWateringHistory(userPlantId: number): Promise<WateringHistory[]> {
     try {
-      const result = await client.query('SELECT * FROM watering_history WHERE user_plant_id = $1', [userPlantId]);
+      const result = await client.query(
+        'SELECT * FROM watering_history WHERE user_plant_id = $1 ORDER BY watered_date DESC, created_at DESC NULLS LAST',
+        [userPlantId]
+      );
       return result.rows.map(row => ({
         id: row.id,
         userPlantId: row.user_plant_id,
         wateredDate: row.watered_date,
-        notes: row.notes
+        notes: row.notes,
+        createdAt: row.created_at
       }));
     } catch (error) {
       console.error('Error fetching watering history:', error);
@@ -584,7 +589,8 @@ class DatabaseStorage implements Storage {
         id: row.id,
         userPlantId: row.user_plant_id,
         wateredDate: row.watered_date,
-        notes: row.notes
+        notes: row.notes,
+        createdAt: row.created_at
       };
     } catch (error) {
       console.error('Error updating watering record:', error);
