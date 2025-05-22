@@ -37,6 +37,7 @@ export default function Header() {
   const confirmSignOut = () => {
     clearAuth();
     setShowSignOutDialog(false);
+    setIsMenuOpen(false);
     toast({
       title: "Signed out",
       description: "You have been signed out successfully.",
@@ -164,8 +165,27 @@ export default function Header() {
                 </svg>
               </Button>
             </SheetTrigger>
-            <SheetContent>
-              <div className="flex flex-col space-y-4 mt-8">
+            <SheetContent className="w-[300px]">
+              <div className="flex items-center mb-8">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-8 w-8 text-primary mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
+                </svg>
+                <h2 className="text-2xl font-poppins font-semibold text-charcoal">
+                  PlantPal
+                </h2>
+              </div>
+              <div className="flex flex-col space-y-6">
                 <Link href="/explore">
                   <a
                     className={`${
@@ -191,36 +211,21 @@ export default function Header() {
                   </Link>
                 )}
                 {isSignedIn ? (
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>
-                          {user?.username[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-charcoal font-poppins">
-                        {user?.username}
-                      </span>
-                    </div>
+                  <div className="flex flex-col space-y-4 pt-4 border-t border-gray-200">
                     <Link href="/account">
-                      <Button
-                        variant="ghost"
-                        className="text-charcoal hover:text-primary w-full justify-start px-0"
+                      <a
+                        className="text-charcoal hover:text-primary transition font-poppins text-lg"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        Account
-                      </Button>
+                        Account Settings
+                      </a>
                     </Link>
-                    <Button
-                      variant="ghost"
-                      className="text-charcoal hover:text-primary w-full justify-start px-0"
-                      onClick={() => {
-                        initiateSignOut();
-                        setIsMenuOpen(false);
-                      }}
+                    <a
+                      className="text-red-600 hover:text-red-700 transition font-poppins text-lg cursor-pointer"
+                      onClick={initiateSignOut}
                     >
-                      Sign out
-                    </Button>
+                      Sign Out
+                    </a>
                   </div>
                 ) : (
                   <Link href="/signin">
