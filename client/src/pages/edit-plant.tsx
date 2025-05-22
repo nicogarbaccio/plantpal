@@ -21,10 +21,10 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { EnhancedUserPlant } from "@/types";
 import PlantForm from "@/components/plant-form";
 
-// Create form schema (similar to add-plant but without plantId)
+// Create form schema (similar to add-plant)
 const formSchema = z.object({
   plantId: z.number().min(1, "Please select a plant"),
-  nickname: z.string().min(1, "Nickname is required"),
+  nickname: z.string().optional(),
   location: z.string().min(1, "Location is required"),
   wateringFrequency: z.number().min(1, "Watering frequency is required"),
   notes: z.string().optional(),
@@ -93,7 +93,7 @@ export default function EditPlant() {
     if (userPlant) {
       form.reset({
         plantId: userPlant.plantId,
-        nickname: userPlant.nickname,
+        nickname: userPlant.nickname || undefined,
         location: userPlant.location,
         wateringFrequency: userPlant.wateringFrequency,
         notes: userPlant.notes || "",

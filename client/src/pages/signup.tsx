@@ -20,12 +20,60 @@ export default function SignUp() {
   const { setAuth, isLoading, setLoading } = useAuthStore();
   const [, setLocation] = useLocation();
 
+  const validateForm = () => {
+    // Username validation
+    if (username.length < 3) {
+      setError("Username must be at least 3 characters long");
+      return false;
+    }
+    if (username.length > 20) {
+      setError("Username must be less than 20 characters long");
+      return false;
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      setError(
+        "Username can only contain letters, numbers, underscores and hyphens"
+      );
+      return false;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return false;
+    }
+
+    // Password validation
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return false;
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      setError("Password must contain at least one lowercase letter");
+      return false;
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      setError("Password must contain at least one uppercase letter");
+      return false;
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      setError("Password must contain at least one number");
+      return false;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    if (!validateForm()) {
       return;
     }
 

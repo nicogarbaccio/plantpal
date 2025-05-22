@@ -8,7 +8,17 @@ interface WaterStatusResult {
 }
 
 export function useWaterStatus(userPlant: EnhancedUserPlant): WaterStatusResult {
-  // Default values if dates are missing
+  const today = new Date();
+  
+  if (userPlant.needsInitialWatering) {
+    return {
+      status: PlantStatus.Unknown,
+      percentRemaining: 0,
+      statusColor: "bg-gray-400" // neutral gray for unknown status
+    };
+  }
+
+  // If dates are missing (but not because of initial watering)
   if (!userPlant.lastWatered || !userPlant.nextWaterDate) {
     return {
       status: PlantStatus.NeedsWater,
@@ -16,13 +26,8 @@ export function useWaterStatus(userPlant: EnhancedUserPlant): WaterStatusResult 
       statusColor: "bg-[#FF9F43]" // warning orange
     };
   }
-
-  const today = new Date();
   const lastWatered = new Date(userPlant.lastWatered);
   const nextWaterDate = new Date(userPlant.nextWaterDate);
-  
-  // Calculate how many days since last watering
-  const daysSinceWatering = differenceInDays(today, lastWatered);
   
   // Calculate how many days until next watering (can be negative if overdue)
   const daysUntilNextWatering = differenceInDays(nextWaterDate, today);

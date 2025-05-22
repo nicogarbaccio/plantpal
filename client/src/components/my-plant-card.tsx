@@ -7,7 +7,7 @@ import WaterProgress from "@/components/water-progress";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useWaterStatus } from "@/hooks/use-water-status";
 import { toast } from "@/hooks/use-toast";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isToday, format, startOfDay } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,7 +67,9 @@ export default function MyPlantCard({ userPlant }: MyPlantCardProps) {
   };
 
   const statusText = () => {
-    if (status === "needs-water") {
+    if (status === "unknown") {
+      return "Watering status unknown";
+    } else if (status === "needs-water") {
       return userPlant.nextWaterDate &&
         new Date(userPlant.nextWaterDate) < new Date()
         ? `${formatDistanceToNow(new Date(userPlant.nextWaterDate))} overdue`
@@ -84,7 +86,24 @@ export default function MyPlantCard({ userPlant }: MyPlantCardProps) {
   };
 
   const getBannerIcon = () => {
-    if (status === "needs-water") {
+    if (status === "unknown") {
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5 mr-1"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      );
+    } else if (status === "needs-water") {
       return (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -156,10 +175,23 @@ export default function MyPlantCard({ userPlant }: MyPlantCardProps) {
         <div className="flex justify-between items-start mb-2">
           <div>
             <h4 className="font-poppins font-medium text-lg">
-              {userPlant.nickname}
+              {userPlant.nickname || userPlant.plant?.name}
             </h4>
-            <p className="text-gray-500 text-sm font-lato italic">
-              {userPlant.location}
+            <p className="text-gray-500 text-sm">
+              {userPlant.nickname ? (
+                <>
+                  <span className="block font-lato text-primary">
+                    {userPlant.plant?.name}
+                  </span>
+                  <span className="block font-lato italic">
+                    {userPlant.location}
+                  </span>
+                </>
+              ) : (
+                <span className="block font-lato italic">
+                  {userPlant.location}
+                </span>
+              )}
             </p>
           </div>
           <DropdownMenu>
@@ -285,7 +317,28 @@ export default function MyPlantCard({ userPlant }: MyPlantCardProps) {
             Last Watered:{" "}
             <span className="text-charcoal">
               {userPlant.lastWatered
-                ? `${formatDistanceToNow(new Date(userPlant.lastWatered))} ago`
+                ? (() => {
+                    const lastWateredDate = new Date(userPlant.lastWatered);
+                    const now = new Date();
+                    const lastWateredLocal = new Date(
+                      lastWateredDate.getTime() -
+                        lastWateredDate.getTimezoneOffset() * 60000
+                    );
+                    const todayLocal = new Date(
+                      now.getTime() - now.getTimezoneOffset() * 60000
+                    );
+
+                    // Compare dates without time
+                    const isWateredToday =
+                      lastWateredLocal.toISOString().split("T")[0] ===
+                      todayLocal.toISOString().split("T")[0];
+
+                    return isWateredToday
+                      ? "Today"
+                      : `${formatDistanceToNow(lastWateredDate, {
+                          addSuffix: true,
+                        })}`;
+                  })()
                 : "Never"}
             </span>
           </p>

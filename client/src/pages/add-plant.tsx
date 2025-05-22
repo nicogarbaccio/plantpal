@@ -33,7 +33,7 @@ import PlantForm from "@/components/plant-form";
 // Create form schema
 const formSchema = z.object({
   plantId: z.number().min(1, "Please select a plant"),
-  nickname: z.string().min(1, "Nickname is required"),
+  nickname: z.string().optional(),
   location: z.string().min(1, "Location is required"),
   wateringFrequency: z.number().min(1, "Watering frequency is required"),
   notes: z.string().optional(),
@@ -57,11 +57,14 @@ export default function AddPlant() {
     queryKey: ["/api/plants"],
   });
 
-  // Get current date in YYYY-MM-DD format
-  const today = new Date().toISOString().split("T")[0];
-  const nextWeek = new Date();
+  // Get current date with time set to noon to avoid timezone issues
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const todayString = today.toISOString();
+
+  const nextWeek = new Date(today);
   nextWeek.setDate(nextWeek.getDate() + 7);
-  const nextWeekFormatted = nextWeek.toISOString().split("T")[0];
+  const nextWeekString = nextWeek.toISOString();
 
   // Set up form with preselected plant if available
   const form = useForm<z.infer<typeof formSchema>>({
@@ -73,8 +76,8 @@ export default function AddPlant() {
       wateringFrequency: 7, // Default to weekly watering
       notes: "",
       imageUrl: "",
-      lastWatered: today,
-      nextWaterDate: nextWeekFormatted,
+      lastWatered: todayString,
+      nextWaterDate: nextWeekString,
     },
   });
 
@@ -134,14 +137,18 @@ export default function AddPlant() {
     const nextWaterDate = new Date(lastWatered);
     nextWaterDate.setDate(lastWatered.getDate() + data.wateringFrequency);
 
+    // Set time to noon UTC to avoid timezone issues
+    lastWatered.setUTCHours(12, 0, 0, 0);
+    nextWaterDate.setUTCHours(12, 0, 0, 0);
+
     const formData: AddPlantFormData = {
       ...data,
       wateringFrequency: Math.max(1, data.wateringFrequency), // Ensure positive watering frequency
       // Clean up optional fields
       notes: data.notes?.trim() || undefined,
       imageUrl: data.imageUrl?.trim() || undefined,
-      lastWatered: data.lastWatered,
-      nextWaterDate: nextWaterDate.toISOString().split("T")[0],
+      lastWatered: lastWatered.toISOString(),
+      nextWaterDate: nextWaterDate.toISOString(),
     };
 
     addPlantMutation.mutate(formData);

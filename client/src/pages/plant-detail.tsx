@@ -19,7 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { Plant, WateringHistory } from "@shared/schema";
 import { EnhancedUserPlant, WateringResponse } from "@/types";
 import { apiRequest } from "@/lib/queryClient";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, isToday } from "date-fns";
 import { useState } from "react";
 import {
   AlertDialog,
@@ -150,7 +150,20 @@ export default function PlantDetail() {
   // Delete watering record mutation
   const deleteWateringMutation = useMutation({
     mutationFn: async (recordId: number) => {
-      await apiRequest("DELETE", `/api/watering-history/${recordId}`);
+      const response = await apiRequest(
+        "DELETE",
+        `/api/watering-history/${recordId}`
+      );
+      if (!response.ok && response.status !== 204) {
+        let errorMessage = "Failed to delete watering record";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          // If we can't parse the error message, use the default
+        }
+        throw new Error(errorMessage);
+      }
     },
     onSuccess: () => {
       toast({
@@ -165,10 +178,10 @@ export default function PlantDetail() {
       setRecordToDelete(null);
       setIsConfirmDeleteOpen(false);
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to delete watering record. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -557,10 +570,14 @@ export default function PlantDetail() {
                                   )}
                                 </span>
                                 <span className="text-gray-500 text-sm ml-2">
-                                  {formatDistanceToNow(
-                                    new Date(record.wateredDate)
-                                  )}{" "}
-                                  ago
+                                  {isToday(new Date(record.wateredDate))
+                                    ? "Today"
+                                    : formatDistanceToNow(
+                                        new Date(record.wateredDate),
+                                        {
+                                          addSuffix: true,
+                                        }
+                                      )}
                                 </span>
                                 {record.notes && (
                                   <p className="text-gray-600 text-sm mt-1">

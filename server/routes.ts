@@ -222,10 +222,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Raw request body:', req.body);
       console.log('User ID from token:', req.user?.userId);
       
+      // Verify user is authenticated
+      if (!req.user?.userId) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
       // Add userId to the request body before validation
       const requestData = {
         ...req.body,
-        userId: req.user!.userId
+        userId: req.user.userId
       };
       
       // Parse and validate the request body
@@ -268,17 +273,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ 
           message: error.message 
         });
+      } else if (error.message.includes('Database error')) {
+        // Handle database errors
+        return res.status(500).json({ 
+          message: error.message 
+        });
       } else {
         // Handle all other errors
-        // Send appropriate error response based on error type
-        const errorMessage = error.message?.toLowerCase() || '';
-        if (errorMessage.includes('not found')) {
-          return res.status(404).json({ message: error.message });
-        } else if (errorMessage.includes('missing required field')) {
-          return res.status(400).json({ message: error.message });
-        } else {
-          return res.status(500).json({ message: 'Failed to create user plant. Please try again.' });
-        }
+        return res.status(500).json({ 
+          message: 'Failed to create user plant. Please try again.',
+          error: error.message
+        });
       }
     }
   });
@@ -426,13 +431,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const deleted = await storage.deleteWateringHistory(id);
-      if (deleted) {
-        res.status(204).end();
-      } else {
-        res.status(500).json({ message: 'Error deleting watering record' });
-      }
+      // If we get here, the deletion was successful
+      res.status(204).end();
     } catch (error) {
-      res.status(500).json({ message: 'Error deleting watering record' });
+      console.error('Error in delete watering history endpoint:', error);
+      if (error instanceof Error) {
+        if (error.message === 'Watering record not found') {
+          res.status(404).json({ message: error.message });
+        } else {
+          res.status(500).json({ message: error.message || 'Error deleting watering record' });
+        }
+      } else {
+        res.status(500).json({ message: 'An unexpected error occurred' });
+      }
     }
   });
 

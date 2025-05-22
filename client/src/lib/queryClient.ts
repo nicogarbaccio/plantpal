@@ -2,7 +2,8 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { useAuthStore } from "./auth";
 
 async function throwIfResNotOk(res: Response) {
-  if (!res.ok) {
+  // Consider 204 No Content as a successful response
+  if (!res.ok && res.status !== 204) {
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }

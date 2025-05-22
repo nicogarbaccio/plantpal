@@ -1,15 +1,17 @@
 import { User, Plant, UserPlant, WateringHistory, Category } from "@shared/schema";
 
 // Enhanced UserPlant type with related plant information
-export interface EnhancedUserPlant extends UserPlant {
+export type EnhancedUserPlant = UserPlant & {
   plant?: Plant;
-}
+  needsInitialWatering: boolean;
+};
 
 // Plant status types
 export enum PlantStatus {
   Healthy = "healthy",
   NeedsWater = "needs-water",
-  Upcoming = "upcoming"
+  Upcoming = "upcoming",
+  Unknown = "unknown"
 }
 
 // Watering response type
@@ -21,7 +23,7 @@ export interface WateringResponse {
 // Form submission types
 export interface AddPlantFormData {
   plantId: number;
-  nickname: string;
+  nickname?: string;
   location: string;
   wateringFrequency: number;
   notes?: string;

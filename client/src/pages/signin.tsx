@@ -17,9 +17,44 @@ export default function SignIn() {
   const { setAuth, isLoading, setLoading } = useAuthStore();
   const [, setLocation] = useLocation();
 
+  const validateForm = () => {
+    // Identifier validation
+    if (identifier.trim().length === 0) {
+      setError("Please enter your username or email");
+      return false;
+    }
+
+    // Basic email format check if identifier looks like an email
+    if (identifier.includes("@")) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(identifier)) {
+        setError("Please enter a valid email address");
+        return false;
+      }
+    }
+
+    // Password validation
+    if (password.trim().length === 0) {
+      setError("Please enter your password");
+      return false;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {

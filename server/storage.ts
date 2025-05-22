@@ -20,7 +20,8 @@ const mapUserPlantRow = (row: any): UserPlant => ({
   nextWaterDate: row.next_water_date,
   imageUrl: row.image_url,
   notes: row.notes,
-  createdAt: row.created_at
+  createdAt: row.created_at,
+  needsInitialWatering: row.needs_initial_watering
 });
 
 // Database interface for plant operations
@@ -135,7 +136,7 @@ class DatabaseStorage implements Storage {
       const today = new Date();
       const wateringRecord = {
         userPlantId: id,
-        wateredDate: format(today, 'yyyy-MM-dd'),
+        wateredDate: format(today, 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\''),
         notes: notes || ''
       };
 
@@ -148,9 +149,9 @@ class DatabaseStorage implements Storage {
       // Update user plant's last watered and next water date
       const userPlant = await this.getUserPlant(id);
       if (userPlant) {
-        const nextWaterDate = format(addDays(today, userPlant.wateringFrequency), 'yyyy-MM-dd');
+        const nextWaterDate = format(addDays(today, userPlant.wateringFrequency), 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
         await client.query(
-          'UPDATE user_plants SET last_watered = $1, next_water_date = $2 WHERE id = $3',
+          'UPDATE user_plants SET last_watered = $1, next_water_date = $2, needs_initial_watering = false WHERE id = $3',
           [wateringRecord.wateredDate, nextWaterDate, id]
         );
       }
@@ -291,46 +292,69 @@ class DatabaseStorage implements Storage {
 
   async createUserPlant(insertUserPlant: InsertUserPlant): Promise<UserPlant> {
     try {
+      // Log the input data
+      console.log('Creating user plant with data:', {
+        ...insertUserPlant,
+        password: undefined // Don't log sensitive data
+      });
+
       // Validate that the plant exists first
       const plant = await client.query('SELECT id FROM plants WHERE id = $1', [insertUserPlant.plantId]);
       if (plant.rows.length === 0) {
         throw new Error(`Plant with id ${insertUserPlant.plantId} not found`);
       }
 
-      // Handle dates consistently
+      // Handle dates consistently with timezone awareness
       const now = new Date();
-      const formattedLastWatered = format(
-        insertUserPlant.lastWatered ? new Date(insertUserPlant.lastWatered) : now,
-        'yyyy-MM-dd'
-      );
-      const formattedNextWaterDate = format(
-        insertUserPlant.nextWaterDate 
-          ? new Date(insertUserPlant.nextWaterDate)
-          : addDays(now, insertUserPlant.wateringFrequency),
-        'yyyy-MM-dd'
-      );
+      const lastWateredDate = insertUserPlant.lastWatered ? new Date(insertUserPlant.lastWatered) : now;
+      
+      // Set both dates to noon UTC
+      lastWateredDate.setUTCHours(12, 0, 0, 0);
+      const formattedLastWatered = lastWateredDate.toISOString();
+
+      console.log('Formatted last watered date:', formattedLastWatered);
+      
+      const nextWaterDate = insertUserPlant.nextWaterDate 
+        ? new Date(insertUserPlant.nextWaterDate)
+        : addDays(lastWateredDate, insertUserPlant.wateringFrequency);
+      // Also use UTC for next water date
+      nextWaterDate.setUTCHours(12, 0, 0, 0);
+      const formattedNextWaterDate = nextWaterDate.toISOString();
+
+      console.log('Formatted next water date:', formattedNextWaterDate);
 
       // Validate required fields
-      if (!insertUserPlant.nickname?.trim()) {
-        throw new Error('Required field missing: nickname');
-      }
       if (!insertUserPlant.location?.trim()) {
         throw new Error('Required field missing: location');
       }
-      
-      console.log('Creating user plant with data:', {
-        ...insertUserPlant,
+
+      // If nickname is not provided, get the plant name to use as default
+      if (!insertUserPlant.nickname?.trim()) {
+        const plantResult = await client.query('SELECT name FROM plants WHERE id = $1', [insertUserPlant.plantId]);
+        insertUserPlant.nickname = plantResult.rows[0].name;
+      }
+
+      // Log the SQL query parameters
+      console.log('Inserting user plant with parameters:', {
+        userId: insertUserPlant.userId,
+        plantId: insertUserPlant.plantId,
+        nickname: insertUserPlant.nickname?.trim() || null,
+        location: insertUserPlant.location.trim(),
         lastWatered: formattedLastWatered,
-        nextWaterDate: formattedNextWaterDate
+        wateringFrequency: insertUserPlant.wateringFrequency,
+        nextWaterDate: formattedNextWaterDate,
+        imageUrl: insertUserPlant.imageUrl?.trim() || null,
+        notes: insertUserPlant.notes?.trim() || null,
+        createdAt: now
       });
 
       // Insert the user plant with proper date handling
       const result = await client.query(
-        'INSERT INTO user_plants (user_id, plant_id, nickname, location, last_watered, watering_frequency, next_water_date, image_url, notes, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+        'INSERT INTO user_plants (user_id, plant_id, nickname, location, last_watered, watering_frequency, next_water_date, image_url, notes, created_at, needs_initial_watering) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false) RETURNING *',
         [
           insertUserPlant.userId,
           insertUserPlant.plantId,
-          insertUserPlant.nickname.trim(),
+          insertUserPlant.nickname?.trim() || null,
           insertUserPlant.location.trim(),
           formattedLastWatered,
           insertUserPlant.wateringFrequency,
@@ -345,20 +369,36 @@ class DatabaseStorage implements Storage {
         throw new Error('Failed to create user plant - no row returned');
       }
 
+      // Log the successful insert
+      console.log('Successfully inserted user plant:', result.rows[0]);
+
+      // Create initial watering history record
+      await client.query(
+        'INSERT INTO watering_history (user_plant_id, watered_date, notes) VALUES ($1, $2, $3)',
+        [result.rows[0].id, formattedLastWatered, 'Initial watering record']
+      );
+
       return mapUserPlantRow(result.rows[0]);
     } catch (error: any) {
       // Improve error messages for common database errors
-      console.error('Database error details:', error);
+      console.error('Database error details:', {
+        error: error,
+        message: error.message,
+        code: error.code,
+        column: error.column,
+        constraint: error.constraint,
+        stack: error.stack
+      });
       
       if (error.code === '23503') {
-        throw new Error('Invalid plant or user reference');
+        throw new Error(`Invalid plant or user reference: ${error.detail || error.message}`);
       } else if (error.code === '23502') {
         throw new Error(`Required field missing: ${error.column}`);
       } else if (error.message.includes('not found') || error.message.includes('Required field')) {
         throw error; // Preserve these specific error messages
       } else {
         console.error('Unexpected error in createUserPlant:', error);
-        throw new Error('Database error occurred while creating user plant');
+        throw new Error(`Database error occurred while creating user plant: ${error.message}`);
       }
     }
   }
@@ -379,7 +419,7 @@ class DatabaseStorage implements Storage {
   async updateUserPlant(userPlant: UserPlant): Promise<UserPlant> {
     try {
       const result = await client.query(
-        'UPDATE user_plants SET user_id = $1, plant_id = $2, nickname = $3, location = $4, last_watered = $5, watering_frequency = $6, next_water_date = $7, image_url = $8, notes = $9, created_at = $10 WHERE id = $11 RETURNING *',
+        'UPDATE user_plants SET user_id = $1, plant_id = $2, nickname = $3, location = $4, last_watered = $5, watering_frequency = $6, next_water_date = $7, image_url = $8, notes = $9, created_at = $10, needs_initial_watering = $11 WHERE id = $12 RETURNING *',
         [
           userPlant.userId,
           userPlant.plantId,
@@ -391,6 +431,7 @@ class DatabaseStorage implements Storage {
           userPlant.imageUrl,
           userPlant.notes,
           userPlant.createdAt,
+          userPlant.needsInitialWatering,
           userPlant.id
         ]
       );
@@ -399,20 +440,7 @@ class DatabaseStorage implements Storage {
         throw new Error("User plant not found");
       }
       
-      const row = result.rows[0];
-      return {
-        id: row.id,
-        userId: row.user_id,
-        plantId: row.plant_id,
-        nickname: row.nickname,
-        location: row.location,
-        lastWatered: row.last_watered,
-        wateringFrequency: row.watering_frequency,
-        nextWaterDate: row.next_water_date,
-        imageUrl: row.image_url,
-        notes: row.notes,
-        createdAt: row.created_at
-      };
+      return mapUserPlantRow(result.rows[0]);
     } catch (error) {
       console.error('Error updating user plant:', error);
       throw error;
@@ -496,24 +524,12 @@ class DatabaseStorage implements Storage {
 
   async getPlantsNeedingWater(userId: number): Promise<UserPlant[]> {
     try {
-      const today = format(new Date(), 'yyyy-MM-dd');
+      const today = format(new Date(), 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
       const result = await client.query(
         'SELECT * FROM user_plants WHERE user_id = $1 AND next_water_date <= $2',
         [userId, today]
       );
-      return result.rows.map(row => ({
-        id: row.id,
-        userId: row.user_id,
-        plantId: row.plant_id,
-        nickname: row.nickname,
-        location: row.location,
-        lastWatered: row.last_watered,
-        wateringFrequency: row.watering_frequency,
-        nextWaterDate: row.next_water_date,
-        imageUrl: row.image_url,
-        notes: row.notes,
-        createdAt: row.created_at
-      }));
+      return result.rows.map(mapUserPlantRow);
     } catch (error) {
       console.error('Error fetching plants needing water:', error);
       return [];
@@ -522,24 +538,12 @@ class DatabaseStorage implements Storage {
 
   async getHealthyPlants(userId: number): Promise<UserPlant[]> {
     try {
-      const today = format(new Date(), 'yyyy-MM-dd');
+      const today = format(new Date(), 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
       const result = await client.query(
         'SELECT * FROM user_plants WHERE user_id = $1 AND next_water_date > $2',
         [userId, today]
       );
-      return result.rows.map(row => ({
-        id: row.id,
-        userId: row.user_id,
-        plantId: row.plant_id,
-        nickname: row.nickname,
-        location: row.location,
-        lastWatered: row.last_watered,
-        wateringFrequency: row.watering_frequency,
-        nextWaterDate: row.next_water_date,
-        imageUrl: row.image_url,
-        notes: row.notes,
-        createdAt: row.created_at
-      }));
+      return result.rows.map(mapUserPlantRow);
     } catch (error) {
       console.error('Error fetching healthy plants:', error);
       return [];
@@ -548,25 +552,13 @@ class DatabaseStorage implements Storage {
 
   async getUpcomingWateringPlants(userId: number): Promise<UserPlant[]> {
     try {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const nextWeek = format(addDays(new Date(), 7), 'yyyy-MM-dd');
+      const today = format(new Date(), 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
+      const nextWeek = format(addDays(new Date(), 7), 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
       const result = await client.query(
         'SELECT * FROM user_plants WHERE user_id = $1 AND next_water_date > $2 AND next_water_date <= $3',
         [userId, today, nextWeek]
       );
-      return result.rows.map(row => ({
-        id: row.id,
-        userId: row.user_id,
-        plantId: row.plant_id,
-        nickname: row.nickname,
-        location: row.location,
-        lastWatered: row.last_watered,
-        wateringFrequency: row.watering_frequency,
-        nextWaterDate: row.next_water_date,
-        imageUrl: row.image_url,
-        notes: row.notes,
-        createdAt: row.created_at
-      }));
+      return result.rows.map(mapUserPlantRow);
     } catch (error) {
       console.error('Error fetching upcoming watering plants:', error);
       return [];
@@ -585,6 +577,37 @@ class DatabaseStorage implements Storage {
       }
       
       const row = result.rows[0];
+      const userPlantId = row.user_plant_id;
+
+      // Get the most recent watering record for this plant
+      const recentWateringResult = await client.query(
+        'SELECT watered_date FROM watering_history WHERE user_plant_id = $1 ORDER BY watered_date DESC LIMIT 1',
+        [userPlantId]
+      );
+
+      if (recentWateringResult.rows.length > 0) {
+        const lastWatered = recentWateringResult.rows[0].watered_date;
+        
+        // Get the plant's watering frequency
+        const plantResult = await client.query(
+          'SELECT watering_frequency FROM user_plants WHERE id = $1',
+          [userPlantId]
+        );
+
+        if (plantResult.rows.length > 0) {
+          const { watering_frequency } = plantResult.rows[0];
+          
+          // Calculate new next water date based on most recent watering
+          const nextWaterDate = format(addDays(new Date(lastWatered), watering_frequency), 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
+
+          // Update the plant's last watered and next water dates
+          await client.query(
+            'UPDATE user_plants SET last_watered = $1, next_water_date = $2 WHERE id = $3',
+            [lastWatered, nextWaterDate, userPlantId]
+          );
+        }
+      }
+      
       return {
         id: row.id,
         userPlantId: row.user_plant_id,
@@ -607,7 +630,7 @@ class DatabaseStorage implements Storage {
       );
 
       if (wateringRecord.rows.length === 0) {
-        return false;
+        throw new Error('Watering record not found');
       }
 
       const userPlantId = wateringRecord.rows[0].user_plant_id;
@@ -619,7 +642,7 @@ class DatabaseStorage implements Storage {
       );
 
       if (deleteResult.rowCount === 0) {
-        return false;
+        throw new Error('Failed to delete watering record');
       }
 
       // Check if this was the last watering record
@@ -628,25 +651,16 @@ class DatabaseStorage implements Storage {
         [userPlantId]
       );
 
-      // If no remaining records, update the plant's watering status
       if (remainingRecords.rows.length === 0) {
-        // Get the plant's watering frequency
-        const plantResult = await client.query(
-          'SELECT watering_frequency FROM user_plants WHERE id = $1',
-          [userPlantId]
+        // If this was the last watering record, mark the plant as needing initial watering
+        // and set nextWaterDate to a past date to indicate it needs water
+        const today = new Date();
+        const pastDate = format(subDays(today, 30), 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
+        
+        await client.query(
+          'UPDATE user_plants SET last_watered = $1, next_water_date = $1, needs_initial_watering = true WHERE id = $2',
+          [pastDate, userPlantId]
         );
-
-        if (plantResult.rows.length > 0) {
-          const { watering_frequency } = plantResult.rows[0];
-          const yesterday = format(subDays(new Date(), watering_frequency + 1), 'yyyy-MM-dd');
-          const nextWaterDate = format(subDays(new Date(), 1), 'yyyy-MM-dd');
-
-          // Update the plant to be overdue
-          await client.query(
-            'UPDATE user_plants SET last_watered = $1, next_water_date = $2 WHERE id = $3',
-            [yesterday, nextWaterDate, userPlantId]
-          );
-        }
       } else {
         // Update the plant with the most recent watering record
         const lastWatered = remainingRecords.rows[0].watered_date;
@@ -655,10 +669,10 @@ class DatabaseStorage implements Storage {
           [userPlantId]
         )).rows[0].watering_frequency;
 
-        const nextWaterDate = format(addDays(new Date(lastWatered), wateringFrequency), 'yyyy-MM-dd');
+        const nextWaterDate = format(addDays(new Date(lastWatered), wateringFrequency), 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
 
         await client.query(
-          'UPDATE user_plants SET last_watered = $1, next_water_date = $2 WHERE id = $3',
+          'UPDATE user_plants SET last_watered = $1, next_water_date = $2, needs_initial_watering = false WHERE id = $3',
           [lastWatered, nextWaterDate, userPlantId]
         );
       }
@@ -666,7 +680,7 @@ class DatabaseStorage implements Storage {
       return true;
     } catch (error) {
       console.error('Error deleting watering record:', error);
-      return false;
+      throw error;
     }
   }
 }

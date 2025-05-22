@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, date, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, integer, boolean, timestamp } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
@@ -40,35 +40,57 @@ export type InsertPlant = z.infer<typeof insertPlantSchema>;
 export type Plant = typeof plants.$inferSelect;
 
 // User's plant collection schema
-export const userPlants = pgTable("user_plants", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  plantId: integer("plant_id").notNull(),
-  nickname: text("nickname").notNull(),  // Required in form
-  location: text("location").notNull(),  // Required in form
-  lastWatered: date("last_watered").notNull(), // Set by server if not provided
-  wateringFrequency: integer("watering_frequency").notNull(),
-  nextWaterDate: date("next_water_date").notNull(), // Set by server if not provided
-  imageUrl: text("image_url"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
+export const userPlants = pgTable('user_plants', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  plantId: integer('plant_id').notNull().references(() => plants.id),
+  nickname: text('nickname'),
+  location: text('location').notNull(),
+  lastWatered: timestamp("last_watered", { withTimezone: true }).notNull(),
+  wateringFrequency: integer('watering_frequency').notNull(),
+  nextWaterDate: timestamp("next_water_date", { withTimezone: true }).notNull(),
+  imageUrl: text('image_url'),
+  notes: text('notes'),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  needsInitialWatering: boolean("needs_initial_watering").default(false).notNull()
 });
 
-export const insertUserPlantSchema = createInsertSchema(userPlants).omit({
-  id: true,
-  createdAt: true,
+// Custom schema for inserting user plants that accepts ISO date strings
+export const insertUserPlantSchema = z.object({
+  userId: z.number(),
+  plantId: z.number(),
+  nickname: z.string().optional(),
+  location: z.string().min(1, "Location is required"),
+  lastWatered: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/, "Invalid date format"),
+  wateringFrequency: z.number().min(1, "Watering frequency is required"),
+  nextWaterDate: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/, "Invalid date format"),
+  imageUrl: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 export type InsertUserPlant = z.infer<typeof insertUserPlantSchema>;
-export type UserPlant = typeof userPlants.$inferSelect;
+export type UserPlant = typeof userPlants.$inferSelect & {
+  id: number;
+  userId: number;
+  plantId: number;
+  nickname: string | null;
+  location: string;
+  lastWatered: Date;
+  wateringFrequency: number;
+  nextWaterDate: Date;
+  imageUrl: string | null;
+  notes: string | null;
+  createdAt: Date | null;
+  needsInitialWatering: boolean;
+};
 
 // Watering history schema
 export const wateringHistory = pgTable("watering_history", {
   id: serial("id").primaryKey(),
   userPlantId: integer("user_plant_id").notNull(),
-  wateredDate: date("watered_date").notNull(),
+  wateredDate: timestamp("watered_date", { withTimezone: true }).notNull(),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export const insertWateringHistorySchema = createInsertSchema(wateringHistory).omit({

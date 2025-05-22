@@ -1,4 +1,4 @@
-import { formatDistanceToNow, addDays, isBefore, isAfter, differenceInDays } from "date-fns";
+import { formatDistanceToNow, addDays, isBefore, isAfter, differenceInDays, isToday } from "date-fns";
 import { EnhancedUserPlant, PlantStatus } from "@/types";
 
 // Calculate watering status for a single plant
@@ -21,9 +21,13 @@ export function getPlantWateringStatus(userPlant: EnhancedUserPlant): PlantStatu
 
 // Format last watered date to human-readable string
 export function formatLastWatered(lastWatered: Date | string | null | undefined): string {
-  if (!lastWatered) return "Never";
+  if (!lastWatered) return "Unknown";
   
-  return formatDistanceToNow(new Date(lastWatered), { addSuffix: true });
+  const date = new Date(lastWatered);
+  if (isToday(date)) {
+    return "Today";
+  }
+  return formatDistanceToNow(date, { addSuffix: true });
 }
 
 // Calculate next water date based on last watered date and frequency

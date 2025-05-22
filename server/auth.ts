@@ -13,14 +13,27 @@ const JWT_EXPIRES_IN = "7d";
 
 // Validation schemas
 export const loginSchema = z.object({
-  identifier: z.string().min(3),
-  password: z.string().min(6),
+  identifier: z.string().min(3, "Username or email must be at least 3 characters long"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
 export const registerSchema = z.object({
-  username: z.string().min(3),
-  email: z.string().email(),
-  password: z.string().min(6),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters long")
+    .max(20, "Username must be less than 20 characters long")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores and hyphens"),
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .min(5, "Email must be at least 5 characters long")
+    .max(100, "Email must be less than 100 characters long"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
 });
 
 // JWT token types

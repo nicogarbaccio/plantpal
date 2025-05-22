@@ -1,5 +1,6 @@
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -38,7 +39,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Create form schema
 const formSchema = z.object({
   plantId: z.number().min(1, "Please select a plant"),
-  nickname: z.string().min(1, "Nickname is required"),
+  nickname: z.string().optional(),
   location: z.string().min(1, "Location is required"),
   wateringFrequency: z.number().min(1, "Watering frequency is required"),
   notes: z.string().optional(),
@@ -69,6 +70,7 @@ export default function PlantForm({
   // Get selected plant details
   const selectedPlantId = form.watch("plantId");
   const selectedPlant = plants?.find((p) => p.id === selectedPlantId);
+  const [open, setOpen] = useState(false);
 
   // Common form locations for the dropdown
   const commonLocations = [
@@ -97,7 +99,7 @@ export default function PlantForm({
                   <Skeleton className="h-10 w-full" />
                 ) : (
                   <>
-                    <Popover>
+                    <Popover open={open} onOpenChange={setOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -127,6 +129,7 @@ export default function PlantForm({
                                 value={plant.name}
                                 onSelect={() => {
                                   field.onChange(plant.id);
+                                  setOpen(false);
                                 }}
                               >
                                 <Check
@@ -159,11 +162,13 @@ export default function PlantForm({
           name="nickname"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nickname</FormLabel>
+              <FormLabel>Nickname (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="What do you call this plant?" {...field} />
               </FormControl>
-              <FormDescription>Give your plant a personal name</FormDescription>
+              <FormDescription>
+                Give your plant a personal name, or we'll use its common name
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

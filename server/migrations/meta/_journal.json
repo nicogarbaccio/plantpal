@@ -22,6 +22,20 @@
       "when": 1747422098533,
       "tag": "0002_goofy_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1747422098534,
+      "tag": "0005_update_timestamp_format",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1747860843927,
+      "tag": "0004_stale_maximus",
+      "breakpoints": true
     }
   ]
 }

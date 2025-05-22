@@ -1,0 +1,1 @@
+ALTER TABLE user_plants ALTER COLUMN nickname DROP NOT NULL;
